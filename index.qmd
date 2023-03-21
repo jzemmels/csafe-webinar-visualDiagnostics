@@ -138,7 +138,7 @@ We discuss an image-analysis algorithm to compare 3D topographical images of car
 
 - **x3p** file contains surface measurements at the micrometer ("micron") level
 
-```{r x3pImage,fig.align="center",fig.width=5,eval=FALSE}
+```{r x3pImage,fig.align="center",fig.width=5,eval=TRUE}
 # knitr::knit_hooks$set(webgl = hook_webgl)
 
 K013sA1 <- x3p_read("data/K013sA1.x3p")
@@ -523,8 +523,6 @@ knitr::include_graphics("figures/cellBasedComparison.png")
 
 - Quantify what our intuition says should be true for (non-)matching scans
 
-- Useful for predicting the score returned by a comparison algorithm
-
 <!-- ```{r,include=TRUE,out.width = "50%"} -->
 <!-- knitr::include_graphics("figures/cellBasedComparison.png") -->
 <!-- ``` -->
@@ -672,6 +670,8 @@ cor(c(cell16_reference_differences$surface.matrix),
 ![](images/differenceCorrelationExample.png){width="50%" fig-align="center"}
 
 ## Visual Diagnostic Statistics vs. Similarity Scores
+
+- Useful for predicting the score returned by a comparison algorithm
 
 [Figure showing feature value vs. class probability]
 
