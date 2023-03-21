@@ -537,7 +537,7 @@ knitr::include_graphics("figures/cellBasedComparison.png")
 
   3. The surface values of the different regions should follow similar trends
 
-## Visual Diagnostic Statistics {.smaller}
+## Similarities vs. Differences Ratio {.smaller}
   
 ```{r,eval = FALSE,include=FALSE}
 cellBased_knownMatch <- readRDS("data/cellBased_knownMatch.rds")
@@ -653,7 +653,7 @@ cor(c(cell16_reference_differences$surface.matrix),
 
 ![](images/filteredRatioDiagram.png){width="10%" fig-align="center"}
 
-## Visual Diagnostic Statistics {.smaller}
+## Different Region Size {.smaller}
 
 2. The different regions should be relatively small 
 
@@ -661,7 +661,7 @@ cor(c(cell16_reference_differences$surface.matrix),
 
 ![](images/neighborhoodSizeExample.png){width=1000 fig-align="center"}
 
-## Visual Diagnostic Statistics {.smaller}
+## Different Region Correlation {.smaller}
 
 3. The surface values of the different regions should follow similar trends
 
@@ -699,9 +699,69 @@ Compute features based on results of the full-scan and cell-based image registra
 
 [Show distribution of features]
 
-## Density-based Features
+## Density-based Features {.smaller}
 
-Compute features after applying the Density-Based Spatial Clustering of Applications with Noise (DBSCAN) algorithm to the cell-based image registration results [Ester et al.]
+- For a matching cartridge case pair, cells should "agree" on a particular registration
+
+```{r eval=FALSE}
+K013sA1_processed <- x3p_read("data/K013sA1_processed.x3p")
+K013sA2_processed <- x3p_read("data/K013sA2_processed.x3p")
+
+cellBasedComparison_8x8 <- scored::comparison_cellBased(reference = K013sA1_processed,
+                                                        target = K013sA2_processed,
+                                                        direction = "both",
+                                                        numCells = c(8,8),
+                                                        returnX3Ps = FALSE)
+
+
+cmcClassifs <- cellBasedComparison_8x8 %>%
+  group_by(direction) %>%
+  mutate(originalMethod = cmcR::decision_CMC(cellIndex=cellIndex,
+                                             x=x,
+                                             y=y,
+                                             theta=theta,
+                                             corr=pairwiseCompCor))
+
+cmcs <- cmcClassifs %>%
+  filter(originalMethod == "CMC") %>%
+  filter(direction == "reference_vs_target" & originalMethod == "CMC") %>%
+  ungroup() %>%
+  select(cellIndex,theta,originalMethod)
+
+non_cmcs <- cmcClassifs %>%
+  filter(direction == "reference_vs_target") %>%
+  group_by(cellIndex) %>%
+  filter(fft_ccf == max(fft_ccf)) %>%
+  ungroup() %>%
+  select(cellIndex,theta,originalMethod) %>%
+  anti_join(cmcs,by = "cellIndex")
+
+alignedCells <- bind_rows(cmcs,non_cmcs) %>%
+  group_by(theta) %>%
+  group_split() %>%
+  map_dfr(function(dat){
+    
+    scored::comparison_cellBased(reference = K013sA1_processed,
+                                 target = K013sA2_processed,
+                                 direction = "one",
+                                 numCells = c(8,8),
+                                 thetas = unique(dat$theta),
+                                 returnX3Ps = TRUE) %>%
+      filter(cellIndex %in% dat$cellIndex) %>%
+      left_join(dat %>% select(cellIndex,originalMethod),
+                by = "cellIndex")
+    
+  })
+
+cmcPlot_knownMatch <- cmcR::cmcPlot(reference = K013sA1_processed,
+                                    target = K013sA2_processed,
+                                    cmcClassifs = alignedCells)
+
+ggsave(filename = "figures/cmcPlot_knownMatch.png",plot = cmcPlot_knownMatch,height = 5,width = 10)
+knitr::plot_crop("figures/cmcPlot_knownMatch.png")
+```
+
+- Density-Based Spatial Clustering of Applications with Noise (DBSCAN) algorithm to the cell-based image registration results [Ester et al.]
 
 ## Cartridge Case Classification Results
 
