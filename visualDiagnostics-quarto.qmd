@@ -1,0 +1,724 @@
+---
+title: "Visual Diagnostics for Algorithmic Cartridge Case Comparisons"
+author: "Joseph Zemmels, Susan VanderPlas, Heike Hofmann"
+title-slide-attributes: 
+  data-background-image: images/title-slide-bkgd.png
+  data-background-size: contain
+format: 
+  revealjs:
+    toc: true
+    toc-depth: 1
+---
+
+## Acknowledgements
+
+```{r setup,include=FALSE}
+library(x3ptools)
+library(tidyverse)
+library(rgl)
+library(impressions)
+library(patchwork)
+
+knitr::opts_chunk$set(fig.align = "center")
+```
+
+
+**Funding statement**
+
+This work was partially funded by the Center for Statistics and Applications in Forensic Evidence (CSAFE) through Cooperative Agreement 70NANB20H019 between NIST and Iowa State University, which includes activities carried out at Carnegie Mellon University, Duke University, University of California Irvine, University of Virginia, West Virginia University, University of Pennsylvania, Swarthmore College and University of Nebraska, Lincoln.
+
+::: {.notes}
+
+Thank you for that introduction
+
+My name is Joe and I will discuss some of the researcher we've done on comparing cartridge case evidence.
+
+If you do have any questions during the talk, please type into the chat so that I can be made aware. I will also answer questions at the end of the presentation.
+
+:::
+
+# Background
+
+## Cartridge Case Comparisons {.smaller .scrollable}
+
+-   Determine whether two cartridge cases were fired from the same firearm.
+
+```{r,fig.align='center',out.width="40%"}
+knitr::include_graphics("images/gunFiringAnimation.gif")
+```
+
+
+- **Cartridge Case**: metal casing containing bullet, powder, and projectile
+
+- **Breech Face**: Back wall of gun barrel
+
+- **Breech Face Impressions**: Markings left on cartridge case surface by the breech face during the firing process
+
+
+::: {.notes}
+
+First off, we are interested in determining whether two cartridge cases were fired from the same firearm.
+
+When a gun is fired and the bullet travels down the barrel, the cartridge case stays in the barrel and is sent backwards.
+
+It slams against the back wall of the barrel, also known as the "breech face," with great force.
+
+Markings on the breech face are impressed into surface of the cartridge case, leaving so-called "breech face impressions."
+
+We assume that markings impressed into a cartridge case are unique to the barrel; analogous to a fingerprint
+
+:::
+
+## Current Practice
+
+- Cartridge cases recovered from crime scene vs. fired from suspect's firearm
+
+- Place evidence under a comparison microscope for simultaneous viewing
+
+- Assess the "agreement" of impressions on the two cartridge cases [AFTE]
+
+```{r,fig.align='center'}
+knitr::include_graphics("images/cartridgeCaseZoomIn.png")
+```
+
+
+::: {.notes}
+
+Notes here
+
+:::
+
+## Impression Comparison Algorithms
+
+National Academies of Science:
+
+*"[T]he decision of a toolmark examiner remains a subjective decision based on unarticulated standards and no statistical foundation for estimation of error rates"* [cite NAS]
+
+. . .
+
+President's Council of Advisors on Science & Technology:
+
+*"[C]onvert firearms analysis from a subjective method to an objective method. This would involve developing and testing image-analysis algorithms for comparing the similarity of tool marks"* [cite PCAST]
+
+. . .
+
+We discuss an image-analysis algorithm to compare 3D topographical images of cartridge cases
+
+# Cartridge Case Comparison Algorithms
+
+## Ames I Study {.smaller}
+
+- [Baldwin et al. (2014)] collected cartridge cases 25 Ruger SR9, 9mm Luger centerfire pistols
+
+- Sent 3268 quartets of cartridge cases to 216 examiners 
+
+  - 3 *known-match* cartridge cases and 1 *unknown source* cartridge case
+
+. . .
+
+- *Match* if fired from the same firearm,  *Non-match* if fired from different firearms
+
+- Examiners determined whether the unknown cartridge case originated from the same firearm as the known-match cartridge cases
+
+. . .
+
+- *False Positive*: Classifying a non-match as a match
+
+  - 1.01% false positive rate (22 out of 2178 comparisons)
+
+- *False Negative*: Classifying a match as a non-match
+
+  - 0.37% false negative rate (4 out of 1090 comparisons)
+
+- *Overall error rate*: 0.80%
+
+## Cartridge Case Data {.scrollable}
+
+- 3D topographic images of cartridge case from Cadre TopMatch scanner [cite]
+
+- **x3p** file contains surface measurements at the micrometer ("micron") level
+
+```{r x3pImage,fig.align="center",fig.width=5,eval=FALSE}
+# knitr::knit_hooks$set(webgl = hook_webgl)
+
+K013sA1 <- x3p_read("data/K013sA1.x3p")
+
+K013sA1$mask <- NULL
+
+x3p_image(K013sA1 %>% x3p_sample(m = 4) %>% x3p_rotate(angle = 90),zoom = 1)
+rglwidget()
+```
+
+## Cartridge Case Comparison Algorithms {.smaller}
+
+Obtain an objective measure of similarity between two cartridge cases
+
+- **Step 1**: Independently *pre-process* scans to isolate breech face impressions
+
+. . .
+
+- **Step 2**: *Compare* two cartridge cases to extract a set of numerical features that distinguish between matches vs. non-matches
+
+. . .
+
+- **Step 3**: Combine numerical features into a single similarity *score* (e.g., predicted match probability)
+
+. . .
+
+Examiner takes similarity score into account during an examination
+
+Challenging to know how/when these steps work correctly
+
+::: {.notes}
+
+We need to know an algorithm's limitations before we know *how* the examiner should interpret the similarity score
+
+:::
+
+## Step 1: Pre-process
+
+Isolate region in scan that consistently contains breech face impressions
+
+```{r preProcessExample,fig.align='center'}
+if(!file.exists("figures/preProcessExample.png")){
+  K013sA1 <- x3p_read("data/K013sA1.x3p") %>%
+    x3p_rotate(angle = 180) %>%
+    x3p_flip_y()
+  
+  K013sA1_processed <- x3p_read("data/K013sA1_processed.x3p")
+  K013sA1_processed$surface.matrix <- K013sA1_processed$surface.matrix*1e6
+  
+  plt1 <- impressions::x3pPlot(K013sA1,
+                               x3pNames = c("K013sA1"),
+                               legend.quantiles = c(0,.1,.5,.9,1))
+  
+  plt2 <- impressions::x3pPlot(K013sA1_processed,
+                               x3pNames = c("K013sA1 Pre-processed"),
+                               legend.quantiles = c(0,.1,.5,.9,1))
+  
+  plt <- (plt1 | plt2)
+  
+  ggsave(plot = plt,filename = "figures/preProcessExample.png",width = 10,height = 5)
+  knitr::plot_crop("figures/preProcessExample.png")
+}
+```
+
+```{r,out.width="100%",include=TRUE}
+knitr::include_graphics("figures/preProcessExample.png")
+```
+
+. . .
+
+***How do we know when a scan is adequately pre-processed?***
+
+## Step 2: Compare Full Scans {.smaller}
+
+- *Registration*: Determine rotation and translation to align two scans
+
+
+```{r fullScanComparison}
+K013sA2_processed <- x3p_read("data/K013sA2_processed.x3p")
+
+if(!file.exists("data/fullScan_knownMatch.rds")){
+  fullScan_knownMatch <- scored::comparison_fullScan(reference = K013sA1_processed,
+                                          target = K013sA2_processed,
+                                          returnX3Ps = FALSE) %>%
+    group_by(direction) %>%
+    filter(fft_ccf == max(fft_ccf)) %>%
+    ungroup() %>%
+    select(direction,theta) %>%
+    pmap_dfr(~ {
+      
+      scored::comparison_fullScan(reference = K013sA1_processed,
+                                  target = K013sA2_processed,
+                                  thetas = ..2,
+                                  returnX3Ps = TRUE) %>%
+        filter(direction == ..1)
+      
+    })
+  
+  saveRDS(fullScan_knownMatch,"data/fullScan_knownMatch.rds")
+}
+```
+
+```{r,fig.align='center',out.width="75%"}
+knitr::include_graphics("images/fullScanRegistrationDiagram.png")
+```
+
+. . .
+
+- *Cross-correlation function* (CCF) measures similarity between scans
+
+  - Choose the rotation/translation that maximizes the CCF
+
+## Step 2: Compare Cells {.smaller}
+
+- Split one scan into a grid of cells that are each registered to the other scan
+
+- For a matching pair, we assume that cells will agree on the same rotation & translation
+
+```{r}
+if(!file.exists("data/cellBased_knownMatch.rds")){
+  cellBased_knownMatch <- bind_rows(scored::comparison_cellBased(reference = K013sA1_processed,
+                                                     target = K013sA2_processed,
+                                                     thetas = 3,
+                                                     numCells = c(4,4),
+                                                     direction = "one",
+                                                     returnX3Ps = TRUE) %>%
+                          mutate(direction = "reference_vs_target"),
+                        scored::comparison_cellBased(reference = K013sA2_processed,
+                                                     target = K013sA1_processed,
+                                                     thetas = -3,
+                                                     numCells = c(4,4),
+                                                     direction = "one",
+                                                     returnX3Ps = FALSE) %>%
+                          mutate(direction = "target_vs_reference"))
+  
+  saveRDS(cellBased_knownMatch,"data/cellBased_knownMatch.rds")
+}
+```
+
+```{r,fig.align='center',out.width="50%"}
+knitr::include_graphics("images/cellBasedRegistrationDiagram.png")
+```
+
+. . .
+
+***Why does the algorithm "choose" a particular registration?***
+
+::: {.notes}
+
+We essentially repeat the process from the last slide with each cell
+
+:::
+
+## Step 3: Score {.smaller}
+
+- Measure of similarity for two cartridge cases
+
+  - Maximized CCF (0.27 in example below) [Vorburger, Tai and Eddy]
+
+  - Congruent Matching Cells (11 CMCs in example below) [Song]
+  
+```{r}
+if(!file.exists("figures/cmcPlot_knownMatch.png")){
+  
+  K013sA1_processed <- x3p_read("data/K013sA1_processed.x3p")
+  K013sA2_processed <- x3p_read("data/K013sA2_processed.x3p")
+  
+  cellBasedComparison_8x8 <- scored::comparison_cellBased(reference = K013sA1_processed,
+                                                          target = K013sA2_processed,
+                                                          direction = "both",
+                                                          numCells = c(8,8),
+                                                          returnX3Ps = FALSE)
+  
+  
+  cmcClassifs <- cellBasedComparison_8x8 %>%
+    group_by(direction) %>%
+    mutate(originalMethod = cmcR::decision_CMC(cellIndex=cellIndex,
+                                               x=x,
+                                               y=y,
+                                               theta=theta,
+                                               corr=pairwiseCompCor))
+  
+  cmcs <- cmcClassifs %>%
+    filter(originalMethod == "CMC") %>%
+    filter(direction == "reference_vs_target" & originalMethod == "CMC") %>%
+    ungroup() %>%
+    select(cellIndex,theta,originalMethod)
+  
+  non_cmcs <- cmcClassifs %>%
+    filter(direction == "reference_vs_target") %>%
+    group_by(cellIndex) %>%
+    filter(fft_ccf == max(fft_ccf)) %>%
+    ungroup() %>%
+    select(cellIndex,theta,originalMethod) %>%
+    anti_join(cmcs,by = "cellIndex")
+  
+  alignedCells <- bind_rows(cmcs,non_cmcs) %>%
+    group_by(theta) %>%
+    group_split() %>%
+    map_dfr(function(dat){
+      
+      scored::comparison_cellBased(reference = K013sA1_processed,
+                                   target = K013sA2_processed,
+                                   direction = "one",
+                                   numCells = c(8,8),
+                                   thetas = unique(dat$theta),
+                                   returnX3Ps = TRUE) %>%
+        filter(cellIndex %in% dat$cellIndex) %>%
+        left_join(dat %>% select(cellIndex,originalMethod),
+                  by = "cellIndex")
+      
+    })
+  
+  cmcPlot_knownMatch <- cmcR::cmcPlot(reference = K013sA1_processed,
+                                      target = K013sA2_processed,
+                                      cmcClassifs = alignedCells)
+  
+  ggsave(filename = "figures/cmcPlot_knownMatch.png",plot = cmcPlot_knownMatch,height = 5,width = 10)
+  knitr::plot_crop("figures/cmcPlot_knownMatch.png")
+  
+}
+```
+
+
+```{r,include=TRUE}
+knitr::include_graphics("figures/cmcPlot_knownMatch.png")
+```
+
+. . .
+
+- **Our approach**: match probability based on trained statistical model
+
+***What factors influence the final similarity score?***
+
+# Visual Diagnostics
+
+## X3P Plot {.smaller}
+
+- Map quantiles of surface height values to a divergent color scheme
+
+```{r,include=TRUE,width = "60%"}
+knitr::include_graphics("images/x3pPlot_colorscheme.png")
+```
+
+- Emphasizes extreme values in scan that may need to be removed during pre-processing
+
+- Allows for comparison of multiple scans on the same color scheme
+
+```{r x3pPlot-comparison}
+if(!file.exists("figures/x3pPlot_comparison.png")){
+  
+  K013sA1_processed <- x3p_read("data/K013sA1_processed.x3p")
+  K013sA1_processed$surface.matrix <- K013sA1_processed$surface.matrix*1e6
+  K013sA2_processed <- x3p_read("data/K013sA2_processed.x3p")
+  K013sA2_processed$surface.matrix <- K013sA2_processed$surface.matrix*1e6
+  
+  plt <- x3pPlot(K013sA1_processed,K013sA2_processed,x3pNames = c("K013sA1","K013sA2"),legend.quantiles = c(0,.01,.1,.5,.9,.99,1))
+  
+  ggsave(filename = "figures/x3pPlot_comparison.png",plot=plt,width=10,height = 5)
+  knitr::plot_crop("figures/x3pPlot_comparison.png")
+  
+}
+```
+
+```{r,include=TRUE,out.width="65%"}
+knitr::include_graphics("figures/x3pPlot_comparison.png")
+```
+
+## X3P Plot Pre-processing Example {.smaller}
+
+Useful for diagnosing when scans need additional pre-processing
+
+```{r,include=TRUE,fig.align='center',out.width = "100%"}
+knitr::include_graphics("images/preProcessEffectExample.png")
+```
+
+## Comparison Plot {.smaller}
+
+- Separate aligned scans into similarities and differences
+
+- Useful for understanding a registration
+
+. . .
+
+- *Similarities*: Element-wise average between two scans after filtering elements that are less than 1 micron apart
+  
+- *Differences*: Elements of both scans that are at least 1 micron apart
+
+[Diagram explaining the element-wise average and filtering]
+
+## Full Scan Comparison Plot
+
+```{r}
+if(!file.exists("figures/comparisonPlotExample.png")){
+  
+  fullScan_knownMatch <- readRDS("data/fullScan_knownMatch.rds")
+  refAligned <- fullScan_knownMatch$cellHeightValues[[1]]
+  refAligned$surface.matrix <- refAligned$surface.matrix*refAligned$cmcR.info$scaleByVal*1e6
+  targAligned <- fullScan_knownMatch$alignedTargetCell[[1]]
+  targAligned$surface.matrix <- targAligned$surface.matrix*targAligned$cmcR.info$scaleByVal*1e6
+  
+  plt <- impressions::x3p_comparisonPlot(x3p1 = refAligned,x3p2 = targAligned,
+                                         plotLabels = c("K013sA1","K013sA2 Aligned",
+                                                        "Element-wise Average",
+                                                        "K013sA1 Differences","K013sA2 Differences"),
+                                         legendLength = 20,
+                                         legendUnit = "micron",
+                                         legendQuantiles = c(0,.01,.5,.99,1))
+  
+  ggsave(filename = "figures/comparisonPlotExample.png",plot = plt,width = 10,height = 6,bg = "white")
+  knitr::plot_crop("figures/comparisonPlotExample.png")
+  
+}
+```
+
+```{r,include=TRUE,out.width = "100%"}
+knitr::include_graphics("figures/comparisonPlotExample.png")
+```
+
+## Cell Comparison Plot
+
+<!-- ::: {.fragment .fade-up fragment-index=1} -->
+
+<!-- ![](images/cellBasedRegistration_cell1-6.png){.absolute top=0 right=30 width=200 height=100} -->
+
+<!-- ::: -->
+
+```{r}
+if(!file.exists("figures/cellBasedComparison.png")){
+ 
+  cellBased_knownMatch <- readRDS("data/cellBased_knownMatch.rds")
+  
+  plt <- cellBased_knownMatch %>%
+    filter(direction == "reference_vs_target") %>%
+    filter(cellIndex == "1, 6") %>%
+    select(cellIndex,cellHeightValues,alignedTargetCell) %>%
+    pmap(~ {
+      
+      x3p1 <- ..2
+      x3p2 <- ..3
+      
+      x3p1$surface.matrix <- x3p1$surface.matrix*x3p1$cmcR.info$scaleByVal*1e6
+      x3p2$surface.matrix <- x3p2$surface.matrix*x3p2$cmcR.info$scaleByVal*1e6
+      
+      impressions::x3p_comparisonPlot(x3p1,x3p2,
+                                      plotLabels = c(paste0("K013sA1 Cell ",..1),
+                                                     paste0("K013sA2 Aligned Cell"),
+                                                     "Element-wise Average",
+                                                     paste0("K013sA1 Cell ",..1," Differences"),
+                                                     paste0("K013sA2 Aligned Cell\nDifferences")),
+                                      label_y = 45,
+                                      legendUnit = "micron")
+      
+    })
+  
+  ggsave(filename = "figures/cellBasedComparison.png",plot = plt[[1]],
+         width = 10,height = 6,bg = "white")
+  knitr::plot_crop("figures/cellBasedComparison.png")
+  
+}
+```
+
+<div class="r-stack">
+
+::: {.fragment fade-out fragment-index=1}
+
+![](images/cellBasedRegistration_cell1-6.png){fig-align="center" width=100%}
+
+:::
+
+::: {.fragment .fade-up fragment-index=1}
+
+```{r,include=TRUE,out.width = "100%"}
+knitr::include_graphics("figures/cellBasedComparison.png")
+```
+
+:::
+
+</div>
+
+## Translating Visuals to Statistics {.smaller}
+
+- Quantify what our intuition says should be true for (non-)matching scans
+
+- Useful for predicting the score returned by a comparison algorithm
+
+<!-- ```{r,include=TRUE,out.width = "50%"} -->
+<!-- knitr::include_graphics("figures/cellBasedComparison.png") -->
+<!-- ``` -->
+
+. . .
+
+- For truly matching scans...
+
+  1. There should be more similarities than differences
+  
+  2. The different regions should be relatively small 
+
+  3. The surface values of the different regions should follow similar trends
+
+## Visual Diagnostic Statistics {.smaller}
+  
+```{r,eval = FALSE,include=FALSE}
+cellBased_knownMatch <- readRDS("data/cellBased_knownMatch.rds")
+
+cell16 <- cellBased_knownMatch %>%
+  filter(cellIndex == "1, 6" & direction == "reference_vs_target")
+
+cell16_reference <- cell16$cellHeightValues[[1]]
+cell16_target <- cell16$alignedTargetCell[[1]]
+
+cell16_reference$surface.matrix <- cell16_reference$surface.matrix*cell16_reference$cmcR.info$scaleByVal*1e6
+cell16_target$surface.matrix <- cell16_target$surface.matrix*cell16_target$cmcR.info$scaleByVal*1e6
+
+x3pAveraged <- x3p_filter(x3p = x3p_elemAverage(cell16_reference,cell16_target),
+                            cond = function(x,y,thresh) abs(y) <= thresh,
+                            y = c({cell16_reference$surface.matrix - cell16_target$surface.matrix}),
+                            thresh = 1)
+
+x3pAveraged_differences <- x3p_filter(x3p = x3p_elemAverage(cell16_reference,cell16_target),
+                            cond = function(x,y,thresh) abs(y) > thresh,
+                            y = c({cell16_reference$surface.matrix - cell16_target$surface.matrix}),
+                            thresh = 1)
+
+x3pPlot(x3pAveraged,x3pAveraged_differences)
+```
+
+
+```{r,eval=FALSE}
+cellBased_knownMatch <- readRDS("data/cellBased_knownMatch.rds")
+
+cell16 <- cellBased_knownMatch %>%
+  filter(cellIndex == "1, 6" & direction == "reference_vs_target")
+
+cell16_reference <- cell16$cellHeightValues[[1]]
+cell16_target <- cell16$alignedTargetCell[[1]]
+
+cell16_reference$surface.matrix <- cell16_reference$surface.matrix*cell16_reference$cmcR.info$scaleByVal*1e6
+cell16_target$surface.matrix <- cell16_target$surface.matrix*cell16_target$cmcR.info$scaleByVal*1e6
+
+x3pAveraged_differences <- x3p_filter(x3p = x3p_elemAverage(cell16_reference,cell16_target),
+                            cond = function(x,y,thresh) abs(y) > thresh,
+                            y = c({cell16_reference$surface.matrix - cell16_target$surface.matrix}),
+                            thresh = 1)
+
+x3pAveraged_binarized <- x3pAveraged_differences
+x3pAveraged_binarized$surface.matrix <- !is.na(x3pAveraged_binarized$surface.matrix)
+
+imager::label(imager::as.cimg(x3pAveraged_binarized$surface.matrix)) %>%
+  as.data.frame() %>%
+  filter(value > 0) %>%
+  group_by(value) %>%
+  tally() %>%
+  mutate(n = n*x3pAveraged_binarized$header.info$incrementY*1e6) %>%
+  summarize(meanSize = mean(n),
+            sdSize = sd(n))
+
+imager::label(imager::as.cimg(x3pAveraged_binarized$surface.matrix)) %>%
+  as.data.frame() %>%
+  filter(value > 0) %>%
+  group_by(value) %>%
+  tally() %>%
+  mutate(n = n*x3pAveraged_binarized$header.info$incrementY*1e6) %>%
+  ggplot(aes(x = n)) +
+  geom_histogram(fill = "grey50",colour = "black",
+                 binwidth =  7.37364) +
+  theme_bw() +
+  scale_y_continuous(breaks = 1:9,limits = c(0,6.2)) +
+  coord_cartesian(expand = FALSE,xlim = c(0,350)) +
+  labs(x = expression(Region~Size~'('~micron^2~')'),
+       y = "Number of regions") +
+  theme(axis.title = element_text(size = 12),
+        axis.text = element_text(size = 11))
+```
+
+
+```{r,eval=FALSE}
+cellBased_knownMatch <- readRDS("data/cellBased_knownMatch.rds")
+
+cell16 <- cellBased_knownMatch %>%
+  filter(cellIndex == "1, 6" & direction == "reference_vs_target")
+
+cell16_reference <- cell16$cellHeightValues[[1]]
+cell16_target <- cell16$alignedTargetCell[[1]]
+
+cell16_reference$surface.matrix <- cell16_reference$surface.matrix*cell16_reference$cmcR.info$scaleByVal*1e6
+cell16_target$surface.matrix <- cell16_target$surface.matrix*cell16_target$cmcR.info$scaleByVal*1e6
+
+x3pAveraged_differences <- x3p_filter(x3p = x3p_elemAverage(cell16_reference,cell16_target),
+                            cond = function(x,y,thresh) abs(y) > thresh,
+                            y = c({cell16_reference$surface.matrix - cell16_target$surface.matrix}),
+                            thresh = 1)
+
+cell16_reference_differences <- x3p_filter(x3p = cell16_reference,
+                            cond = function(x,y,thresh) abs(y) > thresh,
+                            y = c({cell16_reference$surface.matrix - cell16_target$surface.matrix}),
+                            thresh = 1)
+
+cell16_target_differences <- x3p_filter(x3p = cell16_target,
+                            cond = function(x,y,thresh) abs(y) > thresh,
+                            y = c({cell16_reference$surface.matrix - cell16_target$surface.matrix}),
+                            thresh = 1)
+
+x3pPlot(cell16_reference_differences,cell16_target_differences)
+
+cor(c(cell16_reference_differences$surface.matrix),
+    c(cell16_target_differences$surface.matrix),use = "pairwise.complete.obs")
+```
+
+
+1. There should be more similarities than differences
+
+> *Ratio between number of similar vs. different observations*
+
+![](images/filteredRatioDiagram.png){width="10%" fig-align="center"}
+
+## Visual Diagnostic Statistics {.smaller}
+
+2. The different regions should be relatively small 
+
+> *Size of the different regions*
+
+![](images/neighborhoodSizeExample.png){width=1000 fig-align="center"}
+
+## Visual Diagnostic Statistics {.smaller}
+
+3. The surface values of the different regions should follow similar trends
+
+> *Correlation between the different regions of the two scans*
+
+![](images/differenceCorrelationExample.png){width="50%" fig-align="center"}
+
+## Visual Diagnostic Statistics vs. Similarity Scores
+
+[Figure showing feature value vs. class probability]
+
+# Automatic Cartridge Evidence Scoring (ACES) Algorithm
+
+## Automatic Cartridge Evidence Scoring
+
+- Comparison algorithm that pre-processes, compares, and scores two cartridge case scans
+
+- Computes 19 numerical features for each cartridge case pair
+
+- Predicts match probability for an unknown cartridge case pair using trained statistical model
+
+![](images/ACES_pipelineDiagram.png){fig-align="center" width=1000}
+
+## Visual Diagnostic Features
+
+Use visual diagnostic statistics discussed earlier as numerical features
+
+[Show distribution of features]
+
+## Registration-based Features
+
+Compute features based on results of the full-scan and cell-based image registration procedures
+
+[Show distribution of features]
+
+## Density-based Features
+
+Compute features after applying the Density-Based Spatial Clustering of Applications with Noise (DBSCAN) algorithm to the cell-based image registration results [Ester et al.]
+
+## Cartridge Case Classification Results
+
+# Conclusions
+
+## Conclusions & Future Work
+
+## Software
+
+- **cartridgeInvestigatR** interactive web application
+  - <https://csafe.shinyapps.io/cartridgeInvestigatR/>
+
+- **impressions** R package for visual diagnostics
+  - <https://jzemmels.github.io/impressions/>
+
+- **scored** R package for ACES algorithm
+  - <https://jzemmels.github.io/scored/>
+
+## References
+
