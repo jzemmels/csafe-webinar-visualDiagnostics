@@ -299,28 +299,30 @@ In the next few slides, I will discuss challenges we've faced at each step.
 
 :::
 
-## Step 1: Pre-process {.smaller}
+## Step 1: Pre-process
 
 Isolate region in scan that consistently contains breech face impressions
 
-```{r,fig.width=8,fig.align='center'}
+```{r,fig.width=8,fig.align='center',eval=TRUE,include=FALSE}
 K013sA1 <- x3p_read("data/K013sA1.x3p") %>%
   x3p_rotate(angle = 180) %>%
-  x3p_flip_y()
+  x3p_flip_y() %>%
+  sample_x3p(m = 4)
 
 K013sA1$mask <- NULL
 
 K013sA1_processed <- x3p_read("data/K013sA1_processed.x3p") %>%
   x3p_rotate(angle = 180) %>%
   x3p_flip_y() %>%
-  x3p_rotate(angle = 90)
+  x3p_rotate(angle = 90) %>%
+  sample_x3p(m = 4)
 K013sA1_processed$surface.matrix <- K013sA1_processed$surface.matrix*1e6
 K013sA1_processed$header.info$incrementY  <- K013sA1_processed$header.info$incrementY*1e6
 K013sA1_processed$header.info$incrementX  <- K013sA1_processed$header.info$incrementX*1e6
 
 K013sA1$surface.matrix <- K013sA1$surface.matrix %>%
   imager::as.cimg() %>%
-  imager::pad(nPix = 1,axes = "y",val = 100,pos = -1) %>%
+  imager::pad(nPix = 1,axes = "x",val = 100,pos = -1) %>%
   as.matrix()
 
 K013sA1_processed$surface.matrix <- K013sA1_processed$surface.matrix %>%
@@ -337,10 +339,22 @@ K013sA1_processed$surface.matrix[K013sA1_processed$surface.matrix == 100] <- NA
 K013sA1_combined <- K013sA1_processed
 
 K013sA1_combined$surface.matrix <- rbind(K013sA1$surface.matrix,matrix(NA,ncol = ncol(K013sA1$surface.matrix),nrow = 10),K013sA1_processed$surface.matrix)
+```
 
-x3p_image(K013sA1_combined,zoom=.9)
+```{r,fig.width=8,fig.align='center',eval=TRUE,include=TRUE}
+x3p_image(K013sA1_combined,zoom=1)
+
+# x3p_snapshot(file = "figures/preProcess_x3pImage.png")
+# knitr::plot_crop("figures/preProcess_x3pImage.png")
+# rgl::close3d()
+
 rglwidget()
 ```
+
+
+# ```{r,out.width="100%",include=TRUE,eval=TRUE}
+# knitr::include_graphics("figures/preProcess_x3pImage.png")
+# ```
 
 
 ```{r preProcessExample,fig.align='center',eval=FALSE}
