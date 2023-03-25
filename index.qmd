@@ -107,8 +107,6 @@ You can see that there are two microscopes, one for each stage, that are combine
 The goal of the forensic examination is to assess the "agreement" of the impressions on the two cartridge cases.
 For our purposes, we are particularly interested in the impressions on the cartridge case primer, which you can see higlighted on the left side of the diagram
 
-
-Current practice says that if you recover two cartridge cases, let's say one is from a crime scene and another is from a suspect's firearm, then you can analyze the markings under a comparison microscope to determine whether they were both fired from the suspect's gun.
 The final result is the examiner's conclusion on whether the cartridge cases originated from the same firearm.
 
 :::
@@ -137,12 +135,16 @@ Now why are we talking about comparison algorithms today?
 
 Well, in recent years the scientific validity of many forensic disciplines has been called into question.
 
-For example in 2009, a report from the National Research Council stated that the decision of a toolmark examiner, which is the examiner who would be looking at these comparisons, remains ... [finish the quote]
+For example in 2009, a report from the National Research Council stated that the decision of a toolmark examiner, which is the examiner who would be looking at these comparisons, remains a subjective decision based on unartiluated standards and no statistical foundation for estimation of error rates
+
+**NEXT**
 
 Seven years later, the President's Council of Advisors on Science and Technology said something similar and emphasized that firearms analysis should convert from a subjective method to an objective method, which would involve developing image analysis algorithms for comparing the similarity of tool marks on firearm evidence including cartridge cases.
 
+**NEXT**
+
 Today, we will discuss an image-analysis algorithm that compares cartridge case evidence.
-In particular, we'll introduce a series of diagnostic tools that are useful in understanding how these algorithms work "under the hood."
+In particular, we'll introduce a series of diagnostic tools that are useful in understanding how these algorithms work "under the hood," so to speak
 
 :::
 
@@ -220,7 +222,7 @@ One goal that we had for this project was to come up with an algorithm that had 
 
 - **x3p** file contains surface measurements at the micrometer ("micron") level
 
-```{r x3pImage,fig.align='center',fig.width=8,eval=TRUE}
+```{r x3pImage,fig.align='center',fig.width=5,eval=TRUE}
 # knitr::knit_hooks$set(webgl = hook_webgl)
 
 K013sA1 <- x3p_read("data/K013sA1.x3p")
@@ -291,15 +293,15 @@ Finally, we combine the numerical features into a single similarity score such a
 
 **NEXT**
 
-Eventually, we hope that these algorithms will eventually be used in casework to help the examiner make a conclusion
-However, we first need to know an algorithm's limitations before we know *how* the examiner should interpret the similarity score
+Eventually, we hope that these algorithms will be used in casework to help the examiner make a conclusion
+However, we first need to understand an algorithm's limitations before we know *how* the examiner should interpret the similarity score
 
 One challenge we've commonly faced while working with these comparison algorithms is knowing how and when these steps work as we intend them to.
 In the next few slides, I will discuss challenges we've faced at each step.
 
 :::
 
-## Step 1: Pre-process
+## Step 1: Pre-process {.smaller}
 
 Isolate region in scan that consistently contains breech face impressions
 
@@ -342,7 +344,7 @@ K013sA1_combined$surface.matrix <- rbind(K013sA1$surface.matrix,matrix(NA,ncol =
 ```
 
 ```{r,fig.width=8,fig.align='center',eval=TRUE,include=TRUE}
-x3p_image(K013sA1_combined,zoom=1)
+x3p_image(K013sA1_combined,zoom=1.5)
 
 # x3p_snapshot(file = "figures/preProcess_x3pImage.png")
 # knitr::plot_crop("figures/preProcess_x3pImage.png")
@@ -352,76 +354,114 @@ rglwidget()
 ```
 
 
-# ```{r,out.width="100%",include=TRUE,eval=TRUE}
-# knitr::include_graphics("figures/preProcess_x3pImage.png")
-# ```
+<!--  ```{r,out.width="100%",include=TRUE,eval=TRUE} -->
+<!--  knitr::include_graphics("figures/preProcess_x3pImage.png") -->
+<!--  ``` -->
 
 
-```{r preProcessExample,fig.align='center',eval=FALSE}
-if(!file.exists("figures/preProcessExample.png")){
-  K013sA1 <- x3p_read("data/K013sA1.x3p") %>%
-    x3p_rotate(angle = 180) %>%
-    x3p_flip_y()
-  
-  K013sA1_processed <- x3p_read("data/K013sA1_processed.x3p")
-  K013sA1_processed$surface.matrix <- K013sA1_processed$surface.matrix*1e6
-  
-  plt1 <- impressions::x3pPlot(K013sA1,
-                               x3pNames = c("K013sA1"),
-                               legend.quantiles = c(0,.1,.5,.9,1))
-  
-  plt2 <- impressions::x3pPlot(K013sA1_processed,
-                               x3pNames = c("K013sA1 Pre-processed"),
-                               legend.quantiles = c(0,.1,.5,.9,1))
-  
-  plt <- (plt1 | plt2)
-  
-  ggsave(plot = plt,filename = "figures/preProcessExample.png",width = 10,height = 5)
-  knitr::plot_crop("figures/preProcessExample.png")
-}
-```
+<!-- ```{r preProcessExample,fig.align='center',eval=FALSE} -->
+<!-- if(!file.exists("figures/preProcessExample.png")){ -->
+<!--   K013sA1 <- x3p_read("data/K013sA1.x3p") %>% -->
+<!--     x3p_rotate(angle = 180) %>% -->
+<!--     x3p_flip_y() -->
 
-```{r,out.width="100%",include=TRUE,eval=FALSE}
-knitr::include_graphics("figures/preProcessExample.png")
-```
+<!--   K013sA1_processed <- x3p_read("data/K013sA1_processed.x3p") -->
+<!--   K013sA1_processed$surface.matrix <- K013sA1_processed$surface.matrix*1e6 -->
+
+<!--   plt1 <- impressions::x3pPlot(K013sA1, -->
+<!--                                x3pNames = c("K013sA1"), -->
+<!--                                legend.quantiles = c(0,.1,.5,.9,1)) -->
+
+<!--   plt2 <- impressions::x3pPlot(K013sA1_processed, -->
+<!--                                x3pNames = c("K013sA1 Pre-processed"), -->
+<!--                                legend.quantiles = c(0,.1,.5,.9,1)) -->
+
+<!--   plt <- (plt1 | plt2) -->
+
+<!--   ggsave(plot = plt,filename = "figures/preProcessExample.png",width = 10,height = 5) -->
+<!--   knitr::plot_crop("figures/preProcessExample.png") -->
+<!-- } -->
+<!-- ``` -->
+
+<!-- ```{r,out.width="100%",include=TRUE,eval=FALSE} -->
+<!-- knitr::include_graphics("figures/preProcessExample.png") -->
+<!-- ``` -->
 
 . . .
 
 ***How do we know when a scan is adequately pre-processed?***
+
+::: {.notes}
+
+The purpose of the pre-process step is to isolate the region of the scan that consistently contains breech face impressions.
+
+In our case, this is the circular region of the primer around the firing pin impression.
+Again, the example you see here is interactable, so I can show you that we end up removing a lot of the scan to isolate the region of interest.
+
+**NEXT**
+
+One issue that we commonly ran into while pre-processing scans was knowing when scans were adequately pre-processed.
+You know, what does it even mean for pre-processing to be "adequate?"
+I'll talk about we addressed this question in a few slides.
+
+:::
 
 ## Step 2: Compare Full Scans {.smaller}
 
 - *Registration*: Determine rotation and translation to align two scans
 
 
-```{r fullScanComparison}
-K013sA2_processed <- x3p_read("data/K013sA2_processed.x3p")
+```{r fullScanComparison,eval=FALSE}
+K013sA1_processed <- x3p_read("data/K013sA1_processed.x3p") %>%
+  x3p_rotate(angle = 180) %>%
+  x3p_flip_y() %>%
+  x3p_rotate(angle = 90)
 
-if(!file.exists("data/fullScan_knownMatch.rds")){
-  fullScan_knownMatch <- scored::comparison_fullScan(reference = K013sA1_processed,
-                                          target = K013sA2_processed,
-                                          returnX3Ps = FALSE) %>%
-    group_by(direction) %>%
-    filter(fft_ccf == max(fft_ccf)) %>%
-    ungroup() %>%
-    select(direction,theta) %>%
-    pmap_dfr(~ {
-      
-      scored::comparison_fullScan(reference = K013sA1_processed,
-                                  target = K013sA2_processed,
-                                  thetas = ..2,
-                                  returnX3Ps = TRUE) %>%
-        filter(direction == ..1)
-      
-    })
-  
-  saveRDS(fullScan_knownMatch,"data/fullScan_knownMatch.rds")
-}
+K013sA2_processed <- x3p_read("data/K013sA2_processed.x3p") %>%
+  x3p_rotate(angle = 180) %>%
+  x3p_flip_y() %>%
+  x3p_rotate(angle = 90)
+
+x3p_image(K013sA1_processed,zoom=.7)
+# x3p_snapshot("figures/K013sA1_processed_x3pImage.png")
+# knitr::plot_crop("figures/K013sA1_processed_x3pImage.png")
+rgl::close3d()
+
+x3p_image(K013sA2_processed,zoom=.7)
+# x3p_snapshot("figures/K013sA2_processed_x3pImage.png")
+# knitr::plot_crop("figures/K013sA2_processed_x3pImage.png")
+rgl::close3d()
+# 
+# if(!file.exists("data/fullScan_knownMatch.rds")){
+#   fullScan_knownMatch <- scored::comparison_fullScan(reference = K013sA1_processed,
+#                                           target = K013sA2_processed,
+#                                           returnX3Ps = FALSE) %>%
+#     group_by(direction) %>%
+#     filter(fft_ccf == max(fft_ccf)) %>%
+#     ungroup() %>%
+#     select(direction,theta) %>%
+#     pmap_dfr(~ {
+#       
+#       scored::comparison_fullScan(reference = K013sA1_processed,
+#                                   target = K013sA2_processed,
+#                                   thetas = ..2,
+#                                   returnX3Ps = TRUE) %>%
+#         filter(direction == ..1)
+#       
+#     })
+#   
+#   saveRDS(fullScan_knownMatch,"data/fullScan_knownMatch.rds")
+# }
 ```
 
 ```{r,fig.align='center',out.width="75%"}
-knitr::include_graphics("images/fullScanRegistrationDiagram.png")
+knitr::include_graphics("images/fullScanRegistrationDiagram_x3pImage.png")
 ```
+
+
+<!-- ```{r,fig.align='center',out.width="75%"} -->
+<!-- knitr::include_graphics("images/fullScanRegistrationDiagram.png") -->
+<!-- ``` -->
 
 . . .
 
@@ -429,34 +469,75 @@ knitr::include_graphics("images/fullScanRegistrationDiagram.png")
 
   - Choose the rotation/translation that maximizes the CCF
 
+
+::: {.notes}
+
+The next step is to compare two pre-processed scans.
+
+A common technique we use to compare two scans is called "registration," which essentially involves finding the rotation and translation at which the two scans align best.
+
+In the example on the slide, we have two matching scans K013sA1 and K013sA2 that fired from the same firearm.
+To "register" the two scans, we need to slightly rotate and shift one of the scans to align to the other.
+
+**NEXT**
+
+The way we often choose a registration is by using the Cross-Correlation Function, which measures the similarity between two scans.
+A large CCF value implies highly similar scans.
+As such, we choose the rotation and translation that maximizes the cross-correlation function between the two scans.
+
+One important note is that cartridge cases often only have a few regions with distinguishable impressions.
+This means that even for matching scans, the cross-correlation may not be very large since similarities are "drowned-out" by the dissimilarities.
+
+**NEXT SLIDE**
+
+:::
+
 ## Step 2: Compare Cells {.smaller}
 
-- Split one scan into a grid of cells that are each registered to the other scan
+- Split one scan into a grid of cells that are each registered to the other scan [@song_proposed_2013]
 
 - For a matching pair, we assume that cells will agree on the same rotation & translation
 
-```{r}
+```{r,eval=FALSE}
 if(!file.exists("data/cellBased_knownMatch.rds")){
+  
+  K013sA1_processed <- x3p_read("data/K013sA1_processed.x3p")
+  K013sA2_processed <- x3p_read("data/K013sA2_processed.x3p")
+  
   cellBased_knownMatch <- bind_rows(scored::comparison_cellBased(reference = K013sA1_processed,
                                                      target = K013sA2_processed,
                                                      thetas = 3,
-                                                     numCells = c(4,4),
+                                                     numCells = c(8,8),
                                                      direction = "one",
                                                      returnX3Ps = TRUE) %>%
                           mutate(direction = "reference_vs_target"),
                         scored::comparison_cellBased(reference = K013sA2_processed,
                                                      target = K013sA1_processed,
                                                      thetas = -3,
-                                                     numCells = c(4,4),
+                                                     numCells = c(8,8),
                                                      direction = "one",
                                                      returnX3Ps = TRUE) %>%
                           mutate(direction = "target_vs_reference"))
   
   saveRDS(cellBased_knownMatch,"data/cellBased_knownMatch.rds")
 }
+
+cellBased_knownMatch %>%
+  filter(direction == "reference_vs_target") %>%
+  select(cellHeightValues,alignedTargetCell,cellIndex) %>%
+  pmap(~ {
+    
+    x3pPlot(..1,..2,x3pNames = c(..3,"."))
+    
+  })
 ```
 
 ```{r,fig.align='center',out.width="75%"}
+knitr::include_graphics("images/cellBasedRegistrationDiagram_x3pImage.png")
+```
+
+
+```{r,fig.align='center',out.width="75%",eval=FALSE}
 knitr::include_graphics("images/cellBasedRegistrationDiagram.png")
 ```
 
@@ -466,7 +547,19 @@ knitr::include_graphics("images/cellBasedRegistrationDiagram.png")
 
 ::: {.notes}
 
-We essentially repeat the process from the last slide with each cell
+To solve this issue, John Song, a researcher at NIST, proposed splitting one of the cartridge cases into a grid of "cells," each of which are registered in the other scan.
+So we essentially repeat the process from the last slide, but now for each cell.
+This allows us to consider specific regions of the scan that might contain distinguishable markings rather than considering the full scans all at once.
+
+The key assumption we make here is that cells will agree on the same rotation and translation if the cartridge case pair is truly matching.
+In the example on the slide, you see three cells from the scan on the left and where they register in the other scan.
+One thing I will point out here is that the two cells in the top-right appear to agree on the same registration, as evidenced by these parallel connecting lines.
+In contrast, the cell in the bottom left does not agree with the registration -- you see that the connecting line is not parallel to the other two.
+
+**NEXT**
+
+So something we wrestled with at this step of the algorithm is understanding why the algorithm "chooses" a particular registration.
+In a few slides, I will discuss tools we developed to address this question.
 
 :::
 
@@ -543,7 +636,7 @@ if(!file.exists("figures/cmcPlot_knownMatch.png")){
 ```
 
 
-```{r,include=TRUE}
+```{r,include=TRUE,out.width=600}
 knitr::include_graphics("figures/cmcPlot_knownMatch.png")
 ```
 
@@ -553,7 +646,41 @@ knitr::include_graphics("figures/cmcPlot_knownMatch.png")
 
 ***What factors influence the final similarity score?***
 
+
+::: {.notes}
+
+Once we compare the two scans, the final step is to return some similarity score.
+Different scores have been proposed over the years.
+
+For example, the maximum cross-correlation value is a reasonable choice since it measures the similarity of the two scans.
+However, we talked about the CCF may not be very large if we compute the maximum CCF between the full scans.
+In the example on the slide, the maximum CCF is 0.27, which isn't very large given that the two cartridge cases we've been working with are matching.
+
+Another proposed similarity score proposed by John Song in 2013 is the number of "Congruent Matching Cells" or CMCs.
+This CMC algorithm essentially tries to identify cells that "agree" on the same registration.
+In the example on the slide, you see 11 CMCs in blue and 28 non-CMCs in red.
+Notice that blue cells are organized in a grid-like pattern as we would expect.
+For example, we expect cell 2, 7 to be to the right of cell 2, 6 and this indeed what we see in the second scan.
+On the other hand, cell 2, 5 is not at all where we would expect, so it makes sense that we would exclude it from the similarity score.
+
+
+**NEXT**
+
+We take a slightly different approach by using a statistical model to predict the probability that the two cartridge cases match.
+
+As we worked with these similarity scores, it became clear that we did not understand the factors that influenced the final result.
+We were sort of at the whim of the algorithm.
+Again, I will discuss some tools that we created to address this challenge.
+
+:::
+
 # Visual Diagnostics
+
+::: {.notes}
+
+Now let's discuss some of the visual diagnostic tools we developed.
+
+:::
 
 ## Visual Diagnostics for Algorithms {.smaller}
 
@@ -568,22 +695,28 @@ knitr::include_graphics("figures/cmcPlot_knownMatch.png")
 
 . . .
 
-- We wanted to create tools that are useful for answering these questions
+- We wanted to create tools to address these questions
 
-  - Well-constructed visuals are intuitive and powerful
+  - Well-constructed visuals are intuitive and persuasive
 
+  - Useful for both researchers and practitioners to understand the algorithm's behavior
+
+
+::: {.notes}
+
+After working with the comparison algorithms for a while, we naturally developed a set of questions related to understanding how the algorithms worked.
+
+**NEXT**
+
+We were interested in creating diagnostic tools to address these questions.
+A natural choice for us was visual diagnostics
+This is because well-constructed visuals can simultaneously be approachable while providing complex, nuanced insights.
+
+The diagnostic tools we developed have already been useful for us as researchers and we hope that they will prove useful to practitioners who are interested in understanding the algorithm's behavior.
+
+:::
 
 ## X3P Plot {.smaller}
-
-- Map quantiles of surface values to a divergent color scheme
-
-```{r,include=TRUE,width = "60%"}
-knitr::include_graphics("images/x3pPlot_colorscheme.png")
-```
-
-- Emphasizes extreme values in scan that may need to be removed during pre-processing
-
-- Allows for comparison of multiple scans on the same color scheme
 
 ```{r x3pPlot-comparison}
 if(!file.exists("figures/x3pPlot_comparison.png")){
@@ -595,7 +728,7 @@ if(!file.exists("figures/x3pPlot_comparison.png")){
   
   plt <- x3pPlot(K013sA1_processed,K013sA2_processed,x3pNames = c("K013sA1","K013sA2"),legend.quantiles = c(0,.01,.1,.5,.9,.99,1))
   
-  ggsave(filename = "figures/x3pPlot_comparison.png",plot=plt,width=10,height = 5)
+  ggsave(filename = "figures/x3pPlot_comparison.png",plot=plt,width=10,height = 5,bg="white")
   knitr::plot_crop("figures/x3pPlot_comparison.png")
   
 }
@@ -605,13 +738,66 @@ if(!file.exists("figures/x3pPlot_comparison.png")){
 knitr::include_graphics("figures/x3pPlot_comparison.png")
 ```
 
+- Emphasizes extreme values in scan that may need to be removed during pre-processing
+
+- Allows for comparison of multiple scans on the same color scheme
+
+- Map quantiles of surface values to a divergent color scheme
+
+```{r,include=TRUE,width = "60%"}
+knitr::include_graphics("images/x3pPlot_colorscheme.png")
+```
+
+
+::: {.notes}
+
+The first diagnostic tool we will discuss is the X3P plot, which is a way of representing the surface values of cartridge case scans using a purple, white, orange color scheme.
+
+In the example on the slide, you can see two matching cartridge cases.
+Purple observations are associated with surface values below the median value while orange observations are above the median. We represent the median value with the color white.
+
+We use this color scheme to emphasize extreme values in the scan and to compare the surface values across scans.
+Extreme values are often highly influential in the comparison step, so it is important that we remove extreme values that aren't associated with breech face impressions so that the breech face impressions can be properly compared.
+
+In the example, we can make out some similar markings on the two scans, such as the orange scratch at the 7 o'clock position firing pin impression or the striped impressions around the 4 o'clock position.
+There are also noticable differences such as the dent-like marking near the 11 o'clock position of the firing pin impression in the right scan that isn't shared with the left scan.
+
+The X3P plot is useful by itself to compare markings between two scans, but we have found it particularly useful for determining whether a cartridge case requires additional pre-processing.
+
+**NEXT SLIDE**
+
+:::
+
 ## X3P Plot Pre-processing Example {.smaller}
 
-Useful for diagnosing when scans need additional pre-processing
+- Useful for diagnosing when scans need additional pre-processing
 
-```{r,include=TRUE,fig.align='center',out.width = "100%"}
+```{r,include=TRUE,fig.align='center',out.width = "50%"}
 knitr::include_graphics("images/preProcessEffectExample.png")
 ```
+
+::: {.notes}
+
+As a concrete example of this, consider a matching pair of cartridge cases I came across while working with the comparison algorithms.
+I noticed these two scans because they had uncharacteristically low similarity scores for a matching pair.
+
+The first row shows the two scans after some pre-processing.
+You'll notice that the scan on the left contains a lot of extreme values that are uncharacteristic of breech face impressions.
+For example, we see that the firing pin impression wasn't entirely removed during the first pass of pre-processing.
+There are also large dent-like markings on both scans, such as the purple markings [here] and [here].
+
+These observations are so extreme that they suppress other markings on the two scans that actually look quite similar.
+For example, we see faint striped markings on the top of the two scans.
+The maximized cross correlation value for these scans is 0.14, which low for a matching pair.
+
+Now compare this to the bottom row, which shows the same two scans after removing the extreme values.
+It's a lot easier to see similarities between the two scans - for example those striped impressions are a deeper shade of purple of orange.
+The maximized cross-correlation for *these* scans is 0.29.
+This CCF value is still low but is much higher than before.
+
+This goes to show how the X3P plot is useful for identifying when scans need additional pre-processing.
+
+:::
 
 ## Comparison Plot {.smaller .scrollable}
 
@@ -622,8 +808,6 @@ knitr::include_graphics("images/preProcessEffectExample.png")
 . . .
 
 - *Similarities*: Element-wise average between two scans after filtering elements that are less than 1 micron apart
-  
-- *Differences*: Elements of both scans that are at least 1 micron apart
 
 ```{r eval=FALSE}
 fullScan_knownMatch <- readRDS("data/fullScan_knownMatch.rds")
@@ -727,7 +911,41 @@ x3pAveraged_filt <- x3p_filter(x3p = x3p_elemAverage(reference,target),
 ```
 
 
-![](images/filteringIllustration.png){fig-align="center"}
+![](images/filteringIllustration.png){fig-align="center" width="70%"}
+
+. . .
+
+- *Differences*: Elements of both scans that are at least 1 micron apart
+
+![](images/filteringDifferencesIllustration.png){fig-align="center" width="70%"}
+
+::: {.notes}
+
+Now let's move on to another visual diagnostic tool called the Comparison Plot.
+
+The goal of the comparison plot is to separate two scans into similarities and differences, which is useful for understanding why the algorithm chose a particular registration.
+
+**NEXT**
+
+To compute the similarities, you can imagine overlaying the two surfaces on top of one another.
+We then compute the element-wise average and distance between the two scans.
+
+The element-wise average is sort of a hybrid of the two surfaces while the element-wise distance emphasizes where the two surfaces differ the most.
+
+We then apply a filter to the element-wise average based on whether distance between the surfaces is larger than 1 micron.
+The plot you see on the slide shows white elements where the distance between the two surfaces is larger than 1.
+We remove those elements from the element-wise average, which results in a visualization of the obvious "similarities" between the two original scans.
+
+**NEXT**
+
+Conversely, we define "differences" to be elements of the two scans where the distance is greater than 1 micron.
+We apply a filtering to the two original scans, but this time only keep those elements for which the surfaces are far apart.
+
+We combine the similarities and differences into a single visualization to construct the comparison plot
+
+**NEXT SLIDE**
+
+:::
 
 ## Full Scan Comparison Plot
 
@@ -757,6 +975,29 @@ if(!file.exists("figures/comparisonPlotExample.png")){
 ```{r,include=TRUE,out.width = "100%"}
 knitr::include_graphics("figures/comparisonPlotExample.png")
 ```
+
+::: {.notes}
+
+An example of a comparison plot of two full scans is shown here.
+
+We show the two scans in the first column after scan K013sA2 has been aligned to K013sA1
+
+The second and third columns show the filtered element-wise average and differences I discussed on the last slide.
+
+To recap, the element-wise average shows the similarities between two scans.
+For example, the eye is naturally drawn to some dark orange and purple regions in the bottom of the element-wise average.
+After identifying these noteworthy regions, we can go back to the original scans in the first column to further explore the similarities around this area.
+For example, the dark purple observations are part of striped markings on the thin edge of the two surfaces.
+
+In a similar manner, we can look at the third column to identify differences between the two scans.
+Again, the eye is naturally drawn to the darkest shades.
+I see a dark purple region on the bottom of the top-right plot that isn't shared with the bottom-right plot.
+If we go back to the first column, we indeed see that these are clear differences in the original scans.
+It appears that the deep purple might be part of the firing pin impression that wasn't fully removed from the scan during pre-processing.
+
+We have found a comparison plot for two full scans gives us a clear, high-level idea of the similarities and differences between the two scans.
+
+:::
 
 ## Cell Comparison Plot
 
@@ -819,23 +1060,89 @@ knitr::include_graphics("figures/cellBasedComparison.png")
 
 </div>
 
+::: {.notes}
+
+However, we have found the comparison plot to be most useful when we use it to compare individual cells.
+This is because we are able to zoom into regions of the scan that may not have as much detail in the full scan plot.
+
+For this example, we'll be focusing on the cell in the first row, sixth column of left scan.
+We see where it aligns right scan.
+
+**NEXT**
+
+The comparison plot allows us to zoom and get a better idea of the similarities and differences in this region.
+Again, we have the original cells in the first column.
+In the middle column, our eye is naturally drawn to the dark purple region near the top of the element-wise average.
+We see in original scans that this corresponds to similar elliptical dark purple regions.
+Further, below that we also see a streak of connected orange observations that look similar between the two scans.
+So again, the element-wise average gives us a quick reference to assess the similarities of the two cells
+
+Considering the differences in the third column, we can make a few observations.
+For one, we notice that the individual regions here are all relatively small - some only a pixel or two in size.
+
+Further, even the larger regions share some similarities.
+For example, take the larger region in the bottom-left of the two plots.
+In the top-right plot, we see a descending trend in the height values from the top-left to the bottom-right -- the surface values move from dark to light orange.
+
+We actually the same descending trend in this region in the bottom-right plot, except at a different starting location.
+Now, the surface values start at a light orange and move to a light purple.
+This discrepancy might happen because of a difference in the amount of pressure applied to the cartridge case surface by the breech face.
+These observations might actually be the "same" marking, but one is deeper than the other.
+So even the "different" regions between these two cells actually share similarities.
+
+In summary, we've found that "zooming into" regions of a cartridge case scan using the comparison plot is really useful for understanding why the algorithm chose a particular registration.
+
+:::
+
 ## Translating Visuals to Statistics {.smaller}
 
-- Quantify what our intuition says should be true for (non-)matching scans
+- Translate qualitative observations made about the visual diagnostics into complementary numerical statistics
 
 <!-- ```{r,include=TRUE,out.width = "50%"} -->
 <!-- knitr::include_graphics("figures/cellBasedComparison.png") -->
 <!-- ``` -->
 
+- Useful to quantify what our intuition says should be true for (non-)matching scans
+
 . . .
 
 - For a matching cartridge case pair...
 
-  1. There should be more similarities than differences
+  1. There should be (many) more similarities than differences
   
   2. The different regions should be relatively small 
 
   3. The surface values of the different regions should follow similar trends
+
+- Statistics are useful for justifying/predicting the behavior of the algorithm
+
+::: {.notes}
+
+The last set of diagnostic tools I'm going to talk about are actually not visuals.
+Instead, they are statistics that we compute based on the visual diagnostics
+
+Throughout this presentation, I've made a lot of qualitative observations about the cartridge case surfaces such as "there are dark purple regions shared between the two scans" or "the differences between the scans are relatively small," etc.
+
+The purpose of these statistics is to translate the qualitative observations we can make about the visual diagnostics into numerical statistics that complement those observations
+
+Using these statistics, we can quantify what our intuition says should be true about matching and non-matching cartridge case pairs
+
+**NEXT**
+
+For example, if we have two truly matching cartridge case pairs, then we can assume...
+
+The number of similarities should outweigh the number of differences (by a lot)
+
+The regions we call "different" should be relatively small and
+
+similar to the observation I made on the last slide, the surface values of the differences should still follow similar trends
+
+As I said before, these statistics provide a numerical complement to the visual diagnostics we discussed before and are useful to predict the behavior of the algorithm.
+
+So we will talk about three statistics that we calculate based on these qualitative observations
+
+:::
+
 
 ## Similarities vs. Differences Ratio {.smaller .scrollable}
   
@@ -950,17 +1257,146 @@ cor(c(cell16_reference_differences$surface.matrix),
 
 > *Ratio between number of similar vs. different observations*
 
-![](images/filteredRatioDiagram.png){width="10%" fig-align="center"}
+![](images/filteredRatioDiagram.png){width="60%" fig-align="center"}
+
+. . .
+
+Compare to a non-match cell comparison:
 
 
+```{r,eval=FALSE}
+K227iG3_processed <- x3ptools::x3p_read("data/K227iG3.x3p")
+K227iG3_processed$surface.matrix[t(as.matrix(K227iG3_processed$mask)) == "#1F376CFF"] <- NA
+K227iG3_processed$mask <- NULL
 
-## Different Region Size {.smaller  .scrollable}
+K013sA1_processed <- x3ptools::x3p_read("data/K013sA1_processed.x3p")
+K013sA1_processed$surface.matrix <- K013sA1_processed$surface.matrix*1e6
+K013sA1_processed$header.info$incrementY <- K013sA1_processed$header.info$incrementY*1e6
+K013sA1_processed$header.info$incrementX <- K013sA1_processed$header.info$incrementX*1e6
+
+K013sA1_processed <- x3p_interpolate(K013sA1_processed,resx = K227iG3_processed$header.info$incrementX)
+
+cellBased_nonMatch <- scored::comparison_cellBased(K013sA1_processed,K227iG3_processed,thetas = 0)%>%
+  filter(cellIndex == "3, 2") %>%
+  select(cellHeightValues,alignedTargetCell)
+
+reference <- cellBased_nonMatch$cellHeightValues[[1]]
+target <- cellBased_nonMatch$alignedTargetCell[[1]]
+
+x3pAverage_similarities <- x3p_filter(x3p = x3p_elemAverage(reference,target),
+                               cond = function(x,y,thresh) abs(y) <= thresh,
+                               y = c({reference$surface.matrix - target$surface.matrix}),
+                               thresh = 1)
+
+x3pAverage_differences <- x3p_filter(x3p = x3p_elemAverage(reference,target),
+                               cond = function(x,y,thresh) abs(y) > thresh,
+                               y = c({reference$surface.matrix - target$surface.matrix}),
+                               thresh = 1)
+
+
+sum(!is.na(x3pAverage_similarities$surface.matrix))
+sum(!is.na(x3pAverage_differences$surface.matrix))
+
+x3pPlot(x3pAverage_similarities,x3pAverage_differences)
+
+x3pAverage_similarities %>%
+  x3p_to_dataFrame() %>%
+  mutate(value = !is.na(value)) %>%
+  ggplot(aes(x=x,y=y,fill=value)) +
+  geom_raster() +
+  theme_void() +
+  coord_fixed(expand=FALSE) +
+  scale_fill_manual(values = c("grey65","white")) +
+  theme(legend.position = "none")
+
+x3pAverage_differences %>%
+  x3p_to_dataFrame() %>%
+  mutate(value = !is.na(value)) %>%
+  ggplot(aes(x=x,y=y,fill=value)) +
+  geom_raster() +
+  theme_void() +
+  coord_fixed(expand=FALSE) +
+  scale_fill_manual(values = c("grey65","white")) +
+  theme(legend.position = "none")
+
+
+x3pAveraged_binarized <- x3pAverage_differences
+x3pAveraged_binarized$surface.matrix <- !is.na(x3pAveraged_binarized$surface.matrix)
+
+scanFilterLabeled <- imager::label(imager::as.cimg(x3pAveraged_binarized$surface.matrix)) %>%
+  as.data.frame() %>%
+  mutate(value=factor(value))
+
+imager::label(imager::as.cimg(x3pAveraged_binarized$surface.matrix)) %>%
+  as.data.frame() %>%
+  filter(value > 0) %>%
+  group_by(value) %>%
+  tally() %>%
+  mutate(n = n*x3pAveraged_binarized$header.info$incrementY) %>%
+  summarize(meanSize = mean(n),
+            sdSize = sd(n))
+
+imager::label(imager::as.cimg(x3pAveraged_binarized$surface.matrix)) %>%
+  as.data.frame() %>%
+  filter(value > 0) %>%
+  group_by(value) %>%
+  tally() %>%
+  mutate(n = n*x3pAveraged_binarized$header.info$incrementY) %>%
+  ggplot(aes(x = n)) +
+  geom_histogram(fill = "grey50",colour = "black",
+                 binwidth =  7.37364) +
+  theme_bw() +
+  scale_y_continuous(breaks = 1:9,limits = c(0,6.2)) +
+  coord_cartesian(expand = FALSE,xlim = c(0,350)) +
+  labs(x = expression(Region~Size~'('~micron^2~')'),
+       y = "Number of regions") +
+  theme(axis.title = element_text(size = 12),
+        axis.text = element_text(size = 11))
+
+scanFilterLabeled %>%
+  df_to_x3p() %>%
+  x3p_to_dataFrame() %>%
+  ggplot(aes(x=x,y=y,fill=value)) +
+  geom_raster() +
+  coord_fixed(expand=FALSE) +
+  theme_void() +
+  scale_x_reverse() +
+  # scale_y_reverse() +
+  theme(legend.position = "none") +
+  scale_fill_manual(values = c("gray65",sample(RColorBrewer::brewer.pal(12,"Paired"),
+                                               size = length(unique(scanFilterLabeled$value)) - 1,
+                                               replace = TRUE)))
+
+reference_differences <- x3p_filter(x3p = reference,
+                               cond = function(x,y,thresh) abs(y) > thresh,
+                               y = c({reference$surface.matrix - target$surface.matrix}),
+                               thresh = 1)
+target_differences <- x3p_filter(x3p = target,
+                               cond = function(x,y,thresh) abs(y) > thresh,
+                               y = c({reference$surface.matrix - target$surface.matrix}),
+                               thresh = 1)
+
+x3pPlot(reference_differences,target_differences)
+cor(c(reference_differences$surface.matrix),
+    c(target_differences$surface.matrix),use = "pairwise.complete.obs")
+```
+
+![](images/filteredRatioDiagram_nonMatch.png){width="60%" fig-align="center"}
+
+## Different Region Size {.smaller}
 
 2. The different regions should be relatively small 
 
 > *Size of the different regions*
 
 ![](images/neighborhoodSizeExample.png){width=1000 fig-align="center"}
+
+. . .
+
+
+Compare to a non-match cell comparison:
+
+![](images/neighborhoodSizeExample_nonMatch.png){width=1000 fig-align="center"}
 
 ## Different Region Correlation {.smaller  .scrollable}
 
@@ -970,11 +1406,17 @@ cor(c(cell16_reference_differences$surface.matrix),
 
 ![](images/differenceCorrelationExample.png){width="50%" fig-align="center"}
 
-## Statistics vs. Similarity Scores
+. . .
 
-- Useful for predicting the score returned by a comparison algorithm
+Compare to a non-match cell comparison:
 
-[Figure showing feature value vs. class probability]
+![](images/differenceCorrelationExample_nonMatch.png){width="50%" fig-align="center"}
+
+<!-- ## Statistics vs. Similarity Scores -->
+
+<!-- - Useful for predicting the score returned by a comparison algorithm -->
+
+<!-- [Figure showing feature value vs. class probability] -->
 
 # Automatic Cartridge Evidence Scoring (ACES) Algorithm
 
@@ -991,6 +1433,12 @@ cor(c(cell16_reference_differences$surface.matrix),
 . . .
 
 - Predicts match probability for an unknown cartridge case pair using trained statistical model
+
+::: {.notes}
+
+I will first talk through in broad terms the 19 numerical features that we calculate and then I will share some results that show that the ACES algorithm is good at differentiating between matching and non-matching cartridge case pairs.
+
+:::
 
 ## Visual Diagnostic Features {.smaller .scrollable}
 
@@ -1016,7 +1464,7 @@ cor(c(cell16_reference_differences$surface.matrix),
     
     - Average different region correlation
 
-[Feature densities here]
+![](images/featureDensity_visualDiag.png){fig-align="center" width="80%"}
 
 ## Registration-based Features {.smaller .scrollable}
 
@@ -1038,7 +1486,7 @@ cor(c(cell16_reference_differences$surface.matrix),
   
   - Standard deviation of cell-based registration values (horizontal/vertical translations & rotation)
 
-[Feature density plot here]
+![](images/featureDensity_registration.png){fig-align="center" width="80%"}
 
 ## Density-based Features {.smaller .scrollable}
 
@@ -1161,8 +1609,6 @@ targetVsRef_8x8 %>%
 
 ![](images/densityBasedFeatureExample.png){fig-align="center" width=700}
 
-. . .
-
 - Features: 
 
   - Average cluster size
@@ -1173,52 +1619,76 @@ targetVsRef_8x8 %>%
 
   - Root sum of squares of the cluster-estimated translations
 
+![](images/featureDensity_densityBased.png){fig-align="center" width="80%"}
+
 ## ACES Statistical Model {.smaller}
 
 - Compute 19 features for each pairwise comparison
 
-- Use 510 cartridge cases collected by @baldwin to fit a *logistic regression* classifier model
+- Use 510 cartridge cases from @baldwin to fit a *logistic regression* classifier
 
 . . .
 
-- Train logistic regression model using 21,945 pairwise comparisons from 210 scans
+- Train random logistic regression using 21,945 pairwise comparisons from 210 scans
 
-  - Classify each pair as a "match" or "non-match" based on estimated match probability
+  - Classify pairs as a "match" or "non-match" based on estimated match probability
   
-  - Select model that minimizes overall error rate while balancing false positive & false negative rates
+  <!-- - Select model that balances false positive and false negative error rates -->
+  
+  - Explore two optimization criteria:
+
+    - Model that minimizes overall error
+
+    - Model that balances false positive and false negative error rates
 
 . . .
 
 - Test model on 44,850 pairwise comparisons from 300 scans
 
-  - Compute false positive and false negative rates
+  - Compute false positive and false negative rates for each model
   
   - Consider distributions of match probabilities for truly matching and non-matching pairs
 
+::: {.notes}
 
-## Cartridge Case Classification Results {.smaller}
+One thing we can get from this model is a predicted probability that the two cartridge cases match
+
+:::
+
+
+## Test Classification Results {.smaller}
 
 | Source | False Positive (%) | False Negative (%) | Overall Error (%) |
 | ------ | -------------: | -------------: | -----------: |
+| ACES, Minimum Error | 0.07 | 7.66 | 0.59 |
+| ACES, Balanced FP/FN | 1.93 | 4.25 | 2.10 |
+| | |
 | @baldwin | 1.01 | 0.37 | 0.80 |
-| ACES, Balanced FP/FN | 1.82 | 1.82 | 1.82 |
-<!-- | ACES, Optim. Accu0.9818191racy | 0.06 | 3.68 | 0.42 | -->
-
-- *ACES False Positive*: 359 out of 19,746 non-match comparisons
-
-- *ACES False Negative*: 40 out of 2,199 match comparisons
-
 . . .
 
 Notes:
 
-- We compare every *pair*wise comparison (1 to 1), @baldwin compared quartets (3 to 1)
+- We compare *pair*wise (1 to 1), @baldwin compared quartets (3 to 1)
 
-- We consider classification accuracy as a means of selecting/comparing models. In practice, the examiner would use the estimated match probability as part of their examination.
+. . .
 
-## Match Probability Distributions
+- Class imbalance in test data: 3,081 match vs. 41,769 non-match comparisons
 
-[Plot of match probabilities for test data]
+  - Natural to achieve higher overall accuracy, lower false positive, and higher false negative rate with more non-match classifications
+  
+. . .
+  
+- The "Balanced FP/FN" model was selected based on the training data. The test data classifications aren't guaranteed to also be balanced. 
+
+## Match Probability Distributions {.smaller .scrollable}
+
+- We consider classification accuracy as a means of selecting/comparing models. 
+
+- In practice, the examiner would use the estimated match probability as part of their examination.
+
+![](images/matchProbDotPlot.png){fig-align="center"  width="70%"}
+
+
 
 # Conclusions
 
@@ -1242,7 +1712,7 @@ Notes:
 
 - Explore other optimization criteria than balancing FP and FN error rates
 
-## Software
+## Thank You!
 
 - **impressions** R package for visual diagnostics
   - <https://jzemmels.github.io/impressions/>
@@ -1258,3 +1728,9 @@ Notes:
 ::: {#refs}
 
 :::
+
+## Appendix
+
+- Specific firearms in the test set tend to have lower associated match probabilities
+
+![](images/matchProbDotPlot_byBarrel.png){fig-align="center" width="60%"}
