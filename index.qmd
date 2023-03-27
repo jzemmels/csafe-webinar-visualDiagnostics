@@ -1,6 +1,6 @@
 ---
 title: "Visual Diagnostics for Algorithmic Cartridge Case Comparisons"
-author: "Joseph Zemmels, Susan VanderPlas, Heike Hofmann"
+author: "Joseph Zemmels, Heike Hofmann, Susan VanderPlas"
 title-slide-attributes: 
   data-background-image: images/title-slide-bkgd.png
   data-background-size: contain
@@ -53,7 +53,7 @@ knitr::include_graphics("images/gunFiringAnimation.gif")
 ```
 
 
-- **Cartridge Case**: metal casing containing primer, powder, and projectile
+- **Cartridge Case**: metal casing containing primer, powder, and a projectile
 
 - **Breech Face**: back wall of gun barrel
 
@@ -69,7 +69,7 @@ GIF source: <https://imgur.com/4CXf9BK>
 
 For  this project, we're interested in determining whether two cartridge cases were fired from the same firearm.
 
-A cartridge case is a metal casing containing the primer, powder, and projectile.
+A cartridge case is a metal casing containing the primer, powder, and a projectile.
 In the animation, you can see an example of a cartridge case that is ejected from the barrel after firing
 
 When a gun is fired and the bullet travels down the barrel, the cartridge case stays in the barrel and is sent backwards as a reaction to the bullet moving forward.
@@ -125,7 +125,7 @@ The final result is the examiner's conclusion on whether the cartridge cases ori
 
 . . .
 
-We discuss an image-analysis algorithm to compare 3D topographical images of cartridge cases
+We discuss the **Automatic Cartridge Evidence Scoring** (ACES) algorithm to compare 3D topographical images of cartridge cases
 
   - Visual diagnostics aid in understanding what the algorithm does "under the hood."
 
@@ -143,7 +143,7 @@ Seven years later, the President's Council of Advisors on Science and Technology
 
 **NEXT**
 
-Today, we will discuss an image-analysis algorithm that compares cartridge case evidence.
+Today, we will discuss an image-analysis algorithm called the Automatic Cartridge Evidence Scoring or "ACES" algorithm that compares cartridge case evidence.
 In particular, we'll introduce a series of diagnostic tools that are useful in understanding how these algorithms work "under the hood," so to speak
 
 :::
@@ -179,11 +179,11 @@ Now that we have the basics down, let's discuss algorithms that compare cartridg
 
 . . .
 
-- 0.80% overall error rate (26 out of 3,268)
+- 0.80% overall error rate (26 out of 3,268, 746 inconclusives)
 
-- 1.01% false positive rate (22 out of 2,178 comparisons)
+- 1.01% false positive rate (22 out of 2,178 comparisons, 735 inconclusives)
 
-- 0.37% false negative rate (4 out of 1,090 comparisons)
+- 0.37% false negative rate (4 out of 1,090 comparisons, 11 inconclusives)
 
 ::: {.notes}
 
@@ -343,7 +343,7 @@ K013sA1_combined <- K013sA1_processed
 K013sA1_combined$surface.matrix <- rbind(K013sA1$surface.matrix,matrix(NA,ncol = ncol(K013sA1$surface.matrix),nrow = 10),K013sA1_processed$surface.matrix)
 ```
 
-```{r,fig.width=8,fig.align='center',eval=TRUE,include=TRUE}
+```{r,fig.width=8,fig.align='center',eval=TRUE,include=TRUE,echo=FALSE}
 x3p_image(K013sA1_combined,zoom=1.5)
 
 # x3p_snapshot(file = "figures/preProcess_x3pImage.png")
@@ -636,7 +636,7 @@ if(!file.exists("figures/cmcPlot_knownMatch.png")){
 ```
 
 
-```{r,include=TRUE,out.width=600}
+```{r,include=TRUE,out.width=500}
 knitr::include_graphics("figures/cmcPlot_knownMatch.png")
 ```
 
@@ -932,9 +932,11 @@ We then compute the element-wise average and distance between the two scans.
 
 The element-wise average is sort of a hybrid of the two surfaces while the element-wise distance emphasizes where the two surfaces differ the most.
 
-We then apply a filter to the element-wise average based on whether distance between the surfaces is larger than 1 micron.
-The plot you see on the slide shows white elements where the distance between the two surfaces is larger than 1.
+We then consider elements where the distance between the two scans is greater than 1 micron.
+The black and white image you see on the slide shows white elements where the distance between the two surfaces is larger than 1 and black elements that are less than 1.
+We apply a filter to the element-wise average based on whether distance between the surfaces is larger than 1 micron.
 We remove those elements from the element-wise average, which results in a visualization of the obvious "similarities" between the two original scans.
+I'll show you a more clear visualization of this plot on the next slide.
 
 **NEXT**
 
@@ -980,7 +982,7 @@ knitr::include_graphics("figures/comparisonPlotExample.png")
 
 An example of a comparison plot of two full scans is shown here.
 
-We show the two scans in the first column after scan K013sA2 has been aligned to K013sA1
+We show the original scans in the first column after scan K013sA2 has been aligned to K013sA1
 
 The second and third columns show the filtered element-wise average and differences I discussed on the last slide.
 
@@ -1383,6 +1385,32 @@ cor(c(reference_differences$surface.matrix),
 
 ![](images/filteredRatioDiagram_nonMatch.png){width="60%" fig-align="center"}
 
+
+::: {.notes}
+
+The first observation we made is that there should be more similarities than differences for two matching cartridge cases.
+
+We measure this by computing the ratio between the number of similarities vs. the number of differences.
+The example we looked at two slides ago is shown again on the slide.
+The top row shows the similarities for two aligned cells from a matching comparison.
+Rather than considering the surface values in this cell, the white and gray image represents that we only consider which elements contain surface values.
+There are 1,449 observations in the top plot.
+
+We do the same thing with the differences, which results in 260 observations on the bottom.
+The ratio between these two numbers is 5.6, which means there are 5.6 times as many similarities as there are differences.
+This number sounds large, but it's useful to consider a non-match example for comparison.
+
+**NEXT**
+
+The example shown here shows the results from a non-match cell comparison.
+Now, it just so happens that the number of similarities in this example is also 1,449, but the number differences is considerably more -- 797.
+In this case, there are 1.8 times as many similarities as there are differences.
+
+As we would expect, there are many more similarities than differences for the matching comparison above compared to the non-matching comparison.
+Again, this ratio provides a quantitative measure of the similarity between two aligned scans.
+
+:::
+
 ## Different Region Size {.smaller}
 
 2. The different regions should be relatively small 
@@ -1397,6 +1425,35 @@ cor(c(reference_differences$surface.matrix),
 Compare to a non-match cell comparison:
 
 ![](images/neighborhoodSizeExample_nonMatch.png){width=1000 fig-align="center"}
+
+::: {.notes}
+
+The next observation we made was that the regions we call "different" should be relatively small.
+
+To measure this, we consider the size of the individual different regions.
+
+On the slide, you see the differences from the matching cell comparison we've been working with.
+Again, we consider which elements contain surface values, as represented by the white and gray image.
+
+This time, however, we use what's called a labeling algorithm to identify connected regions.
+The third visual on the slide demonstrates that we have identified individual regions in the cell, which we distinguish by color.
+
+Once we label the individual regions, it's straightforward to calculate the size of each region.
+The graph here shows a histogram of the region sizes for this example where on the horizontal axis we have the region size in square microns and on the vertical axis, we have the number of regions of a particular size.
+For example, you can see that there are 6 regions that all have very small sizes.
+The one region that is over 300 square microns large is this orange region you see in the third plot.
+
+Finally, we can calculate some summary statistics based on this distribution.
+For example, the average size of these regions is 61.8 square microns with a standard deviation of 72.7 square microns.
+
+**NEXT**
+
+We can compare this to a non-match cell comparison and go through the same process of labeling the connected regions.
+In this non-match example, we see that hte average size of the regions is now 134.1 square microns with a standard deviation of 171.3 square microns.
+
+So these statistics based on the different region sizes provide us with another measure of similarity between the two aligned scans.
+
+:::
 
 ## Different Region Correlation {.smaller  .scrollable}
 
@@ -1418,7 +1475,37 @@ Compare to a non-match cell comparison:
 
 <!-- [Figure showing feature value vs. class probability] -->
 
+::: {.notes}
+
+The last statistic I'll discuss is based on the observation that the surface values of the different regions should follow similar trends.
+
+We measure this by calculating the correlation between the different regions of the two scan.
+
+The example you see on the slide is from a matching cell comparison.
+On the left are the differences from cell 1, 6 of scan K013sA1 and on the right are the differences from the aligned cell in scan K013sA2.
+Just as I noted a few slides back, we can see some similarities in the surface trends between these two visuals.
+Computing the correlation between these two results in a value of 0.48, which is actually relatively high when we are working with these cartridge case scans.
+
+**NEXT**
+
+Compare this now to the non-matching example we've been working with, we again have the differences from a cell comparison between two non-matching scans.
+If you study these two plots for a while, you'll see that there aren't a lot of similarities between the surface trends between these two, which is of course what we would expect given that this is a non-match comparison.
+The low correlation of 0.09 between these two quantifies this notion.
+
+In summary, these three statistics provide a numerical complement to the qualitative observations we can make from the visual diagnostics.
+Together, the statistics and the visual diagnostics give us a more holistic idea of the similarity between two cartridge cases.
+
+:::
+
 # Automatic Cartridge Evidence Scoring (ACES) Algorithm
+
+::: {.notes}
+
+We have talked about how our visual diagnostic tools are useful to explain the behavior of these cartridge case comparison algorithms.
+
+Now, I want to talk about a specific cartridge case comparison algorithm that we've developed with the help of the visual diagnostics that we call the Automatic Cartridge Evidence Scoring or "ACES" algorithm.
+
+:::
 
 ## Automatic Cartridge Evidence Scoring {.smaller}
 
@@ -1432,11 +1519,21 @@ Compare to a non-match cell comparison:
 
 . . .
 
-- Predicts match probability for an unknown cartridge case pair using trained statistical model
+- Predicts match probability for a cartridge case pair using trained statistical model
 
 ::: {.notes}
 
-I will first talk through in broad terms the 19 numerical features that we calculate and then I will share some results that show that the ACES algorithm is good at differentiating between matching and non-matching cartridge case pairs.
+We created the ACES algorithm to encompass all parts of a cartridge case comparison including pre-processing, comparing, and scoring.
+
+**NEXT**
+
+During the comparison phase, we compute 19 numerical features that can be separated into three groups: visual diagnostic features, registration-based features, and density based features
+
+**NEXT**
+
+The final result is a predicted probability that two cartridge cases match based on a trained statistical model.
+
+Over the next few slides, I will first talk through the three groups of features we calculate and then I will share some results that show that the ACES algorithm is good at differentiating between matching and non-matching cartridge case pairs.
 
 :::
 
@@ -1466,6 +1563,25 @@ I will first talk through in broad terms the 19 numerical features that we calcu
 
 ![](images/featureDensity_visualDiag.png){fig-align="center" width="80%"}
 
+::: {.notes}
+
+The first group of features we calculate are based on the visual diagnostic statistics that I discussed a few slides ago.
+
+**NEXT**
+
+We calculate 7 features at the full scan and cell levels.
+For example, the similarities vs. differences ratio, the average and standard deviation of the different region sizes, and the correlation between the different regions.
+
+At the bottom of the slide, you can see the distributions of these features based on the comparisons in our training data. The orange distributions represent the matching comparisons while the gray distributions represent non-matching comparisons.
+You'll note that the matching and non-matching distributions have some partial overlap between in these plots.
+I show these to demonstrate that these 7 features are successful, to varying degrees, at distinguishing between matching and non-matching comparisons, meaning we can use them in a classification algorithm to classify matching and non-matching pairs.
+
+So that's the first group of features
+
+**NEXT SLIDE**
+
+:::
+
 ## Registration-based Features {.smaller .scrollable}
 
 - For a matching cartridge case pair...
@@ -1474,9 +1590,9 @@ I will first talk through in broad terms the 19 numerical features that we calcu
   
   - Cells should "agree" on a particular registration
 
-. . .
-
 - Compute summary statistics of full-scan and cell-based registration results
+
+. . .
 
 - Features:
 
@@ -1487,6 +1603,24 @@ I will first talk through in broad terms the 19 numerical features that we calcu
   - Standard deviation of cell-based registration values (horizontal/vertical translations & rotation)
 
 ![](images/featureDensity_registration.png){fig-align="center" width="80%"}
+
+::: {.notes}
+
+The next group of features are registration-based features.
+
+We compute these features based on the assumptions that for a matching comparison, the correlation values shouldl be large at the full scan and cell levels AND that the cells should "agree" on a particular registration.
+
+**NEXT**
+
+The way we measure this is by computing summary statistics of the full scan and cell based registration results.
+
+For example, we compute the the correlation between the two full scans and compute the average and standard deviation of the the correlations from the cell-based registrations.
+
+We also compute the standard deviation of the cell-based registration values themselves.
+
+Again, I show the distributions of these features at the bottom of the slide, where you can see that these features can distinguish between matching vs. non-matching comparisons.
+
+:::
 
 ## Density-based Features {.smaller .scrollable}
 
@@ -1611,15 +1745,49 @@ targetVsRef_8x8 %>%
 
 - Features: 
 
-  - Average cluster size
-
   - DBSCAN cluster indicator
+
+  - Average DBSCAN cluster size
 
   - Absolute sum of density-estimated rotations
 
   - Root sum of squares of the cluster-estimated translations
 
 ![](images/featureDensity_densityBased.png){fig-align="center" width="80%"}
+
+::: {.notes}
+
+The final group of features we calculate are density-based features.
+
+These features are based on the assumptions that for a matching comparison, the cells should "agree" on a particular registration AND that the estimated registrations between the two comparison directions, meaning registering scan A to scan B and also scan B to scan A, should be opposites of each other.
+
+**NEXT**
+
+To measure this, we apply an algorithm called the Density-Based Spatial Clustering of Applications with Noise or "DBSCAN" algorithm to the cell-based registration results.
+
+On the slide, you can see two scatterplots that represent the estimated translations for each cell in matching comparison.
+So each point in the scatterplot corresponds to one of the cells below.
+On the left, you can see that there is a cluster of points, colored blue, that correspond to the cells that are also colored blue below.
+These are cells that agree on a particular registration, in this case it looks like about -100 microns horizontally and -100 microns vertically.
+You can also see below that these cells align in a nice grid pattern -- cell 1, 5 is next to cell 1, 6 which is above cell 2, 6, etc. - which we would expect because this is matching pair of scans.
+The red points, on the other hand, correspond to the red cells that don't seem to agree on a single registration -- they are sort of randomly distributed on the scan.
+
+So the left side shows the estimated registrations for the cells in scan K013sA2.
+There's nothing stopping us from repeating the cell-based registration, but in the other direction -- that is, trying to find where cells align in the other scan, K013sA1.
+The right-hand side shows these results.
+Again, we see a cluster of blue points corresponding to blue cells that seem to agree on a particular registration.
+The red points again represent cells that don't agree.
+The key finding from this visual is that the estimated registration in scan K013sA1 are almost the exact opposite of the registration in scan K013sA2.
+We can see by noting that the the axes on the right-hand side have been reversed, meaning the axes go from positive to negative from left to right.
+We do this to demonstrate that the clusters are located at essentially the same spot, just opposite of each other.
+
+So the DBSCAN algorithm allows us to identify these clusters of points.
+From this, we compute 4 features including an indicator variable for the existence of a cluster, the average cluster size, and the difference in the estimated registrations between the two comparison directions.
+
+The distributions of these features is shown below.
+The takeaway from this plot is again that these features distingusih between matching and non-matching comparisons.
+
+:::
 
 ## ACES Statistical Model {.smaller}
 
@@ -1651,22 +1819,38 @@ targetVsRef_8x8 %>%
 
 ::: {.notes}
 
-One thing we can get from this model is a predicted probability that the two cartridge cases match
+In summary, we compute these 19 numerical features for each pair of cartridge cases.
+
+Our goal is to compute a similarity score based on these features.
+
+To do so, we used 510 cartridge cases from the Ames I study to train and test a logistic regression classifier model
+
+**NEXT**
+
+The way we did this was by using 21,945 pairwise comparisons to train the logistic regression model.
+So given a cartridge case pair, this logistic regression model will classify that pair a match or a non-match based on an predicted match probability.
+The process of training a model involves selecting model parameters that optimize some criteria.
+For example, we consider two different optimization criteria: one where we select the model that minimizes the overall classification error rate and another that balances the false positive and false negative error rates.
+I'll talk on the next slide about why we consider these criteria separately.
+
+**NEXT**
+
+Once we have the trained model, we use 44,850 pairwise comparisons to test the model on whether it can differentiate between new matching and non-matching comparisons.
+We are interested not only in the false positive and false negative error rates, but we also want to consider the predicted probabilities of the matching and non-matching comparisons since this actually what an examiner would use during their examination.
 
 :::
 
 
 ## Test Classification Results {.smaller}
 
-| Source | False Positive (%) | False Negative (%) | Overall Error (%) |
+| Source | False Pos (%) | False Neg (%) | Overall Error (%) |
 | ------ | -------------: | -------------: | -----------: |
 | ACES, Minimum Error | 0.07 | 7.66 | 0.59 |
 | ACES, Balanced FP/FN | 1.93 | 4.25 | 2.10 |
-| | |
 | @baldwin | 1.01 | 0.37 | 0.80 |
-. . .
+| @baldwin, Inc. as errors| 34.76 | 1.37 | 23.62 |
 
-Notes:
+. . .
 
 - We compare *pair*wise (1 to 1), @baldwin compared quartets (3 to 1)
 
@@ -1680,6 +1864,40 @@ Notes:
   
 - The "Balanced FP/FN" model was selected based on the training data. The test data classifications aren't guaranteed to also be balanced. 
 
+::: {.notes}
+
+The table on this slide summarizes the classification error rates for the two trained models based on the test data.
+In the first row, we can see that the model selected to minimize the overall error rate has a low error rate of 0.59% which consists of a false positive error rate of 0.07% and false negative error rate of 7.66%.
+In second row, the model selected to balance the false palse positive and false negative error rates has a larger overall error rate of 2.1%, but this consists of a false positive and false negative error rates that are much closer to each other.
+
+The reason that I compare these two models to each other is to highlight the fact that two different criteria lead to considerably different results.
+Eventually, we in the forensics and legal communities will need to decide which criteria we want to use when selecting statistical models.
+For example, we could consider whether a false positive error has worse ethical consequences than a false negative - or vice versa.
+Sp there are many criteria we could use, and I wanted to emphasize that these could have radically different outcomes.
+
+For comparison, I've repeated the results reported in the Baldwin study.
+We see that the first model actually has a lower overall error rate, although this is at the expense of a much larger false negative error rate.
+
+**NEXT**
+
+Now, a few notes I wanted to make here: the results here are somewhat difficult to compare directly to the Baldwin results since we compare every pair of cartridge cases whereas Baldwin compared a groupd of 3 known-match cartridge cases to 1 unknown source cartrdige case.
+
+**NEXT**
+
+I also wanted to point out that there is a large class imbalance between the matching and non-matching comparisons in the test data.
+You can see that there are around 3000 matching comparisons and 42,0000 non-matching comparisons.
+This is not at all unique to cartridge case comparisons, but I wanted to point this out to emphasize that if we get more out of erring on the side of non-matching classifications than matching classifications.
+For example, you can see this represented in the first model that a very low false positive rate but a large false negative rate.
+This model seemingly has a preference for making non-match classifications.
+
+**NEXT**
+
+Finally, some of you may be looking at these results and think "why does the balanced false positive and false negative model not have a very well balanced false positive and false negative error rates?"
+I wanted to point out that we select the model that balances these rates on the training data, not the test data.
+As such, there isn't a guarantee that the test classifications will also be balanced - and in this case they aren't.
+
+:::
+
 ## Match Probability Distributions {.smaller .scrollable}
 
 - We consider classification accuracy as a means of selecting/comparing models. 
@@ -1689,6 +1907,22 @@ Notes:
 ![](images/matchProbDotPlot.png){fig-align="center"  width="70%"}
 
 
+::: {.notes}
+
+Now, it's all well and good to look at the classification accuracy to compare different models.
+However, in practice the examiner would instead consider the estimated probability of a match as a similarity score.
+
+The plot on the slide shows the predicted match probabilities for the test data.
+Each of thes points represents a single pairwise comparison, and we distinguish those comparisons by whether they are truly matching or non-matching.
+We can see on top that the non-match comparisons generally have small match probabilities, which is certainly something we hope for.
+Many of the matching comparisons have large match probabilities, but there is a distinct group of comparisons that have very small match probabilities.
+This explains the large false negative error rates we saw on the last slide.
+
+One thing we've noticed with the logistic regression model is that the predictred match probabilities tend to be very polarized, meaning the probabilities are either very close to 1 or very close to 0.
+
+[Go to appendix?]
+
+:::
 
 # Conclusions
 
@@ -1708,9 +1942,11 @@ Notes:
 
 . . .
 
-- Need additional "stress tests" (different ammunition/firearms, degradation levels, etc.)
+- Develop free, open source software to implement visual diagnostics & ACES
 
-- Explore other optimization criteria than balancing FP and FN error rates
+  - Need additional "stress tests" (different ammunition/firearms, degradation levels, etc.)
+
+  - Explore other optimization criteria
 
 ## Thank You!
 
@@ -1729,8 +1965,8 @@ Notes:
 
 :::
 
-## Appendix
+## Appendix: Firearm-wise Probabilities {.smaller}
 
 - Specific firearms in the test set tend to have lower associated match probabilities
 
-![](images/matchProbDotPlot_byBarrel.png){fig-align="center" width="60%"}
+![](images/matchProbDotPlot_byBarrel.png){fig-align="center" width="70%"}
