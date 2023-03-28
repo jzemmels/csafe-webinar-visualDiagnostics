@@ -46,6 +46,23 @@ I'm sure that many of you are already familiar with cartridge case comparisons, 
 
 ## Cartridge Case Comparisons {.smaller}
 
+::: {.notes}
+
+For  this project, we're interested in determining whether two cartridge cases were fired from the same firearm.
+
+A cartridge case is a metal casing containing the primer, powder, and a projectile.
+In the animation, you can see an example of a cartridge case that is ejected from the barrel after firing
+
+When a gun is fired and the bullet travels down the barrel, the cartridge case stays in the barrel and is sent backwards as a reaction to the bullet moving forward.
+
+It then slams against the back wall of the barrel, also known as the "breech face," with great force.
+
+Markings on the breech face are impressed into surface of the cartridge case, and this leaves so-called "breech face impressions."
+
+Forensic examiners use these breech face impressions analogous to a fingerprint to identify the gun from which a cartridge case was fired.
+
+:::
+
 -   Determine whether two cartridge cases were fired from the same firearm.
 
 ```{r,fig.align='center',out.width="35%"}
@@ -65,34 +82,7 @@ GIF source: <https://imgur.com/4CXf9BK>
 
 :::
 
-::: {.notes}
-
-For  this project, we're interested in determining whether two cartridge cases were fired from the same firearm.
-
-A cartridge case is a metal casing containing the primer, powder, and a projectile.
-In the animation, you can see an example of a cartridge case that is ejected from the barrel after firing
-
-When a gun is fired and the bullet travels down the barrel, the cartridge case stays in the barrel and is sent backwards as a reaction to the bullet moving forward.
-
-It then slams against the back wall of the barrel, also known as the "breech face," with great force.
-
-Markings on the breech face are impressed into surface of the cartridge case, and this leaves so-called "breech face impressions."
-
-Forensic examiners use these breech face impressions analogous to a fingerprint to identify the gun from which a cartridge case was fired.
-
-:::
-
 ## Current Practice {.smaller}
-
-- Cartridge cases recovered from crime scene vs. fired from suspect's firearm
-
-- Place evidence under a comparison microscope for simultaneous viewing [@Thompson2017]
-
-- Assess the "agreement" of impressions on the two cartridge cases [@AFTE1992]
-
-![](images/cartridgeCaseZoomIn.png){fig-align="center" width=1000}
-
-
 
 ::: {.notes}
 
@@ -111,23 +101,16 @@ The final result is the examiner's conclusion on whether the cartridge cases ori
 
 :::
 
+- Cartridge case recovered from crime scene vs. fired from suspect's firearm
+
+- Place evidence under a comparison microscope for simultaneous viewing [@Thompson2017]
+
+- Assess the "agreement" of impressions on the two cartridge cases [@AFTE1992]
+
+![](images/cartridgeCaseZoomIn.png){fig-align="center" width=1000}
+
+
 ## Impression Comparison Algorithms {.smaller}
-
-@nas2009:
-
-*"[T]he decision of a toolmark examiner remains a subjective decision based on unarticulated standards and no statistical foundation for estimation of error rates"*
-
-. . .
-
-@pcast:
-
-*"A second - and more important - direction is (as with latent print analysis) to convert firearms analysis from a subjective method to an objective method. This would involve developing and testing image-analysis algorithms for comparing the similarity of tool marks on bullets [and cartridge cases]."*
-
-. . .
-
-We discuss the **Automatic Cartridge Evidence Scoring** (ACES) algorithm to compare 3D topographical images of cartridge cases
-
-  - Visual diagnostics aid in understanding what the algorithm does "under the hood."
 
 ::: {.notes}
 
@@ -148,6 +131,22 @@ In particular, we'll introduce a series of diagnostic tools that are useful in u
 
 :::
 
+@nas2009:
+
+*"[T]he decision of a toolmark examiner remains a subjective decision based on unarticulated standards and no statistical foundation for estimation of error rates"*
+
+. . .
+
+@pcast:
+
+*"A second - and more important - direction is (as with latent print analysis) to convert firearms analysis from a subjective method to an objective method. This would involve developing and testing image-analysis algorithms for comparing the similarity of tool marks on bullets [and cartridge cases]."*
+
+. . .
+
+We discuss the **Automatic Cartridge Evidence Scoring** (ACES) algorithm to compare 3D topographical images of cartridge cases
+
+  - Visual diagnostics aid in understanding what the algorithm does "under the hood."
+
 # Cartridge Case Comparison Algorithms
 
 ::: {.notes}
@@ -157,33 +156,6 @@ Now that we have the basics down, let's discuss algorithms that compare cartridg
 :::
 
 ## Ames I Study {.smaller}
-
-- @baldwin collected cartridge cases from 25 Ruger SR9 pistols
-
-. . .
-
-- Separated cartridge cases into quartets: 3 *known-match* + 1 *unknown source*
-
-- *Match* if fired from the same firearm,  *Non-match* if fired from different firearms
-
-. . .
-
-- 216 examiners tasked with determining whether the unknown cartridge case originated from the same pistol as the known-match cartridge cases
-
-- @baldwin interested in the "false positive" and "false negative" error rates of these examiners
-
-  - *False Positive*: Classifying a non-match as a match
-  
-  - *False Negative*: Classifying a match as a non-match
-
-
-. . .
-
-- 0.80% overall error rate (26 out of 3,268, 746 inconclusives)
-
-- 1.01% false positive rate (22 out of 2,178 comparisons, 735 inconclusives)
-
-- 0.37% false negative rate (4 out of 1,090 comparisons, 11 inconclusives)
 
 ::: {.notes}
 
@@ -212,26 +184,37 @@ Out of 3,268 comparisons, examiners only got 26 wrong with a false positive rate
 
 One goal that we had for this project was to come up with an algorithm that had similar performance to the results of this study
 
-
 :::
+
+- @baldwin collected cartridge cases from 25 Ruger SR9 pistols
+
+. . .
+
+- Separated cartridge cases into quartets: 3 *known-match* + 1 *unknown source*
+
+- *Match* if fired from the same firearm,  *Non-match* if fired from different firearms
+
+. . .
+
+- 216 examiners tasked with determining whether the unknown cartridge case originated from the same pistol as the known-match cartridge cases
+
+- @baldwin interested in the "false positive" and "false negative" error rates of these examiners
+
+  - *False Positive*: Classifying a non-match as a match
+  
+  - *False Negative*: Classifying a match as a non-match
+
+
+. . .
+
+- 0.80% overall error rate (26 out of 3,268, 746 inconclusives)
+
+- 1.01% false positive rate (22 out of 2,178 comparisons, 735 inconclusives)
+
+- 0.37% false negative rate (4 out of 1,090 comparisons, 11 inconclusives)
 
 
 ## Cartridge Case Data {.smaller}
-
-- 3D topographic images from Cadre TopMatch scanner [@topmatch]
-
-- **x3p** file contains surface measurements at the micrometer ("micron") level
-
-```{r x3pImage,fig.align='center',fig.width=5,eval=TRUE}
-# knitr::knit_hooks$set(webgl = hook_webgl)
-
-K013sA1 <- x3p_read("data/K013sA1.x3p")
-
-K013sA1$mask <- NULL
-
-x3p_image(K013sA1 %>% x3p_sample(m = 4) %>% x3p_rotate(angle = 90),zoom = 1.5)
-rglwidget()
-```
 
 ::: {.notes}
 
@@ -250,26 +233,23 @@ Keep in mind that we are specifically interested in circular region around this 
 
 :::
 
+- 3D topographic images from Cadre TopMatch scanner [@topmatch]
+
+- **x3p** file contains surface measurements at the micrometer ("micron") level
+
+```{r x3pImage,fig.align='center',fig.width=5,eval=TRUE}
+# knitr::knit_hooks$set(webgl = hook_webgl)
+
+K013sA1 <- x3p_read("data/K013sA1.x3p")
+
+K013sA1$mask <- NULL
+
+x3p_image(K013sA1 %>% x3p_sample(m = 4) %>% x3p_rotate(angle = 90),zoom = 1.5)
+rglwidget()
+```
+
 
 ## Cartridge Case Comparison Algorithms {.smaller}
-
-Obtain an objective measure of similarity between two cartridge cases
-
-- **Step 1**: Independently *pre-process* scans to isolate breech face impressions
-
-. . .
-
-- **Step 2**: *Compare* two cartridge cases to extract a set of numerical features that distinguish between matches vs. non-matches
-
-. . .
-
-- **Step 3**: Combine numerical features into a single similarity *score* (e.g., predicted probability of a match)
-
-. . .
-
-Examiner takes similarity score into account during an examination
-
-Challenging to know how/when these steps work correctly
 
 ::: {.notes}
 
@@ -301,30 +281,49 @@ In the next few slides, I will discuss challenges we've faced at each step.
 
 :::
 
+Obtain an objective measure of similarity between two cartridge cases
+
+- **Step 1**: Independently *pre-process* scans to isolate breech face impressions
+
+. . .
+
+- **Step 2**: *Compare* two cartridge cases to extract a set of numerical features that distinguish between matches vs. non-matches
+
+. . .
+
+- **Step 3**: Combine numerical features into a single similarity *score* (e.g., predicted probability of a match)
+
+. . .
+
+Examiner takes similarity score into account during an examination
+
+Challenging to know how/when these steps work correctly
+
 ## Step 1: Pre-process {.smaller}
 
 Isolate region in scan that consistently contains breech face impressions
 
-```{r,fig.width=8,fig.align='center',eval=TRUE,include=FALSE}
+```{r,fig.width=8,fig.align='center',eval=TRUE,include=FALSE,eval = FALSE}
 K013sA1 <- x3p_read("data/K013sA1.x3p") %>%
   x3p_rotate(angle = 180) %>%
-  x3p_flip_y() %>%
-  sample_x3p(m = 4)
+  x3p_flip_y() #%>%
+  # sample_x3p(m = 4)
 
-K013sA1$mask <- NULL
+# K013sA1$mask <- NULL
 
 K013sA1_processed <- x3p_read("data/K013sA1_processed.x3p") %>%
   x3p_rotate(angle = 180) %>%
   x3p_flip_y() %>%
-  x3p_rotate(angle = 90) %>%
-  sample_x3p(m = 4)
+  x3p_rotate(angle = 90)# %>%
+  # sample_x3p(m = 4)
 K013sA1_processed$surface.matrix <- K013sA1_processed$surface.matrix*1e6
 K013sA1_processed$header.info$incrementY  <- K013sA1_processed$header.info$incrementY*1e6
 K013sA1_processed$header.info$incrementX  <- K013sA1_processed$header.info$incrementX*1e6
 
 K013sA1$surface.matrix <- K013sA1$surface.matrix %>%
   imager::as.cimg() %>%
-  imager::pad(nPix = 1,axes = "x",val = 100,pos = -1) %>%
+  imager::pad(nPix = 0,axes = "x",val = 100,pos = -1) %>%
+  imager::pad(nPix = 1,axes = "y",val = 100,pos = -1) %>%
   as.matrix()
 
 K013sA1_processed$surface.matrix <- K013sA1_processed$surface.matrix %>%
@@ -337,13 +336,25 @@ K013sA1_processed$surface.matrix <- K013sA1_processed$surface.matrix %>%
 
 K013sA1_processed$surface.matrix[K013sA1_processed$surface.matrix == 100] <- NA
 
+K013sA1_combined <- K013sA1
 
-K013sA1_combined <- K013sA1_processed
+K013sA1_combined$surface.matrix <- 
+  rbind(K013sA1$surface.matrix,
+        matrix(NA,
+               ncol = ncol(K013sA1$surface.matrix),
+               nrow = 10),
+        K013sA1_processed$surface.matrix)
 
-K013sA1_combined$surface.matrix <- rbind(K013sA1$surface.matrix,matrix(NA,ncol = ncol(K013sA1$surface.matrix),nrow = 10),K013sA1_processed$surface.matrix)
+K013sA1_combined$mask <- NULL
+K013sA1_combined$header.info$sizeY <- ncol(K013sA1_combined$surface.matrix)
+K013sA1_combined$header.info$sizeX <- nrow(K013sA1_combined$surface.matrix)
+x3ptools::x3p_write(K013sA1_combined,"data/K013sA1_combined.x3p")
 ```
 
 ```{r,fig.width=8,fig.align='center',eval=TRUE,include=TRUE,echo=FALSE}
+K013sA1_combined <- x3p_read("data/K013sA1_combined.x3p") %>%
+  x3p_sample(m=4)
+
 x3p_image(K013sA1_combined,zoom=1.5)
 
 # x3p_snapshot(file = "figures/preProcess_x3pImage.png")
@@ -409,7 +420,6 @@ I'll talk about we addressed this question in a few slides.
 ## Step 2: Compare Full Scans {.smaller}
 
 - *Registration*: Determine rotation and translation to align two scans
-
 
 ```{r fullScanComparison,eval=FALSE}
 K013sA1_processed <- x3p_read("data/K013sA1_processed.x3p") %>%
@@ -1846,13 +1856,13 @@ We are interested not only in the false positive and false negative error rates,
 | Source | False Pos (%) | False Neg (%) | Overall Error (%) |
 | ------ | -------------: | -------------: | -----------: |
 | ACES, Minimum Error | 0.07 | 7.66 | 0.59 |
-| ACES, Balanced FP/FN | 1.93 | 4.25 | 2.10 |
-| @baldwin | 1.01 | 0.37 | 0.80 |
-| @baldwin, Inc. as errors| 34.76 | 1.37 | 23.62 |
+| ACES, Balanced FP/FN | 1.93 | 4.25 | 2.09 |
+| Ames I | 1.01 | 0.37 | 0.80 |
+| Ames I, Inconcl. as errors| 34.76 | 1.37 | 23.62 |
 
 . . .
 
-- We compare *pair*wise (1 to 1), @baldwin compared quartets (3 to 1)
+- We compare *pair*wise (1 to 1), Ames I [@baldwin] compared quartets (3 to 1)
 
 . . .
 
@@ -1868,7 +1878,7 @@ We are interested not only in the false positive and false negative error rates,
 
 The table on this slide summarizes the classification error rates for the two trained models based on the test data.
 In the first row, we can see that the model selected to minimize the overall error rate has a low error rate of 0.59% which consists of a false positive error rate of 0.07% and false negative error rate of 7.66%.
-In second row, the model selected to balance the false palse positive and false negative error rates has a larger overall error rate of 2.1%, but this consists of a false positive and false negative error rates that are much closer to each other.
+In second row, the model selected to balance the false palse positive and false negative error rates has a larger overall error rate of 2.09%, but this consists of a false positive and false negative error rates that are much closer to each other.
 
 The reason that I compare these two models to each other is to highlight the fact that two different criteria lead to considerably different results.
 Eventually, we in the forensics and legal communities will need to decide which criteria we want to use when selecting statistical models.
@@ -1904,7 +1914,7 @@ As such, there isn't a guarantee that the test classifications will also be bala
 
 - In practice, the examiner would use the estimated match probability as part of their examination.
 
-![](images/matchProbDotPlot.png){fig-align="center"  width="70%"}
+![](images/matchProbDotPlot.png){fig-align="center"  width="90%"}
 
 
 ::: {.notes}
