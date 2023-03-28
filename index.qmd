@@ -9,7 +9,7 @@ format:
   revealjs
 ---
 
-## Acknowledgements
+## Acknowledgements {.smaller}
 
 ```{r setup,include=FALSE}
 library(x3ptools)
@@ -21,6 +21,7 @@ library(patchwork)
 knitr::opts_chunk$set(fig.align = "center")
 ```
 
+Thank you to everyone at the Roy J Carver High Resolution Microscopy Facility for collecting cartridge case scans.
 
 **Funding statement**
 
@@ -155,7 +156,7 @@ Now that we have the basics down, let's discuss algorithms that compare cartridg
 
 :::
 
-## Ames I Study {.smaller}
+## Ames I Study {.smaller .scrollable}
 
 ::: {.notes}
 
@@ -174,13 +175,13 @@ It's important to note here that we call cartridge cases a "match" if they were 
 
 The researchers then sent these cartridge case sets to 216 examiners who were tasked with determining whether the one unknown source cartridge case came from the same pistol as the three known-match cartridge cases
 
-The researchers were particularly interested in assessing the false positive and false negative error rates of these examiners
-A false positive error occurs when a non-match cartridge case is classified as a match while a false negative error occurs when a matching cartridge case is classified as a non-match
+The researchers were particularly interested in assessing the true positive and true negative error rates of these examiners
+A true positive error occurs when a non-match cartridge case is classified as a match while a true negative error occurs when a matching cartridge case is classified as a non-match
 
 **NEXT**
 
 The results they got back showed that the examiners made very few errors during their examinations.
-Out of 3,268 comparisons, examiners only got 26 wrong with a false positive rate of 1.01% and false negative rate of 0.37%.
+Out of 3,268 comparisons, examiners only got 26 wrong with a true positive rate of 1.01% and true negative rate of 0.37%.
 
 One goal that we had for this project was to come up with an algorithm that had similar performance to the results of this study
 
@@ -196,25 +197,34 @@ One goal that we had for this project was to come up with an algorithm that had 
 
 . . .
 
-- 216 examiners tasked with determining whether the unknown cartridge case originated from the same pistol as the known-match cartridge cases
+- 218 examiners tasked with determining whether the unknown cartridge case originated from the same pistol as the known-match cartridge cases
 
-- @baldwin interested in the "false positive" and "false negative" error rates of these examiners
-
-  - *False Positive*: Classifying a non-match as a match
+  - *True Positive* if a match is correctly classified, *True Negative* if non-match is correctly classified
   
-  - *False Negative*: Classifying a match as a non-match
+. . .
 
+| | Match Conclusion | Non-match Conclusion| Inconclusive Conclusion| Total |
+| -------------: | -------------: | -------------: | -------------: | -------------: |
+| **Ground-truth Match** | 1,075 | 4 | 11 | 1,090 |
+| **Ground-truth Non-match** | 22 | 1,421 | 735 + 2* | 2,180 |
+
+- *Inconclusive*: conclusion when there is some agreement or disagreement in characteristics, but not enough to make a match or non-match conclusion [@AFTE1992]
 
 . . .
 
-- 0.80% overall error rate (26 out of 3,268, 746 inconclusives)
+| True Positive (%) | True Negative (%) | Overall Inconclusives (%) |
+| -------------: | -------------: | -------------: |
+| 99.6 | 65.2 | 33.8 |
 
-- 1.01% false positive rate (22 out of 2,178 comparisons, 735 inconclusives)
+</br>
 
-- 0.37% false negative rate (4 out of 1,090 comparisons, 11 inconclusives)
+::: {.aside}
 
+*Two non-match comparisons were deemed "unsuitable for comparison"
 
-## Cartridge Case Data {.smaller}
+:::
+
+## Cartridge Case Data {.smaller .scrollable}
 
 ::: {.notes}
 
@@ -233,9 +243,9 @@ Keep in mind that we are specifically interested in circular region around this 
 
 :::
 
-- 3D topographic images from Cadre TopMatch scanner [@topmatch]
+- 3D topographic images using Cadre$^{\text{TM}}$ TopMatch scanner from Roy J Carver High Resolution Microscopy Facility
 
-- **x3p** file contains surface measurements at the micrometer ("micron") level
+- **x3p** file contains surface measurements at lateral resolution of 1.8 micrometers ("microns") per pixel
 
 ```{r x3pImage,fig.align='center',fig.width=5,eval=TRUE}
 # knitr::knit_hooks$set(webgl = hook_webgl)
@@ -269,7 +279,7 @@ I'll talk in a few slides about some common numerical features we calculate
 
 **NEXT**
 
-Finally, we combine the numerical features into a single similarity score such as the predicted probability that the two cartridge cases match.
+Finally, we combine the numerical features into a single similarity score such as a continuous similarity score between 0 and 1 that the two cartridge cases match.
 
 **NEXT**
 
@@ -291,7 +301,7 @@ Obtain an objective measure of similarity between two cartridge cases
 
 . . .
 
-- **Step 3**: Combine numerical features into a single similarity *score* (e.g., predicted probability of a match)
+- **Step 3**: Combine numerical features into a single similarity *score* (e.g., similarity score between 0 and 1)
 
 . . .
 
@@ -652,7 +662,7 @@ knitr::include_graphics("figures/cmcPlot_knownMatch.png")
 
 . . .
 
-- **Our approach**: predicted probability of a match using a statistical model
+- **Our approach**: similarity score between 0 and 1 using a statistical model
 
 ***What factors influence the final similarity score?***
 
@@ -676,7 +686,7 @@ On the other hand, cell 2, 5 is not at all where we would expect, so it makes se
 
 **NEXT**
 
-We take a slightly different approach by using a statistical model to predict the probability that the two cartridge cases match.
+We take a slightly different approach by using a statistical model to compute a similarity score.
 
 As we worked with these similarity scores, it became clear that we did not understand the factors that influenced the final result.
 We were sort of at the whim of the algorithm.
@@ -1529,7 +1539,7 @@ Now, I want to talk about a specific cartridge case comparison algorithm that we
 
 . . .
 
-- Predicts match probability for a cartridge case pair using trained statistical model
+- Computes similarity score between 0 and 1 for a cartridge case pair using trained statistical model
 
 ::: {.notes}
 
@@ -1541,7 +1551,8 @@ During the comparison phase, we compute 19 numerical features that can be separa
 
 **NEXT**
 
-The final result is a predicted probability that two cartridge cases match based on a trained statistical model.
+The final result is a similarity score between 0 and 1 based on a trained statistical model.
+Larger values of the score imply higher similarity
 
 Over the next few slides, I will first talk through the three groups of features we calculate and then I will share some results that show that the ACES algorithm is good at differentiating between matching and non-matching cartridge case pairs.
 
@@ -1809,23 +1820,23 @@ The takeaway from this plot is again that these features distingusih between mat
 
 - Train random logistic regression using 21,945 pairwise comparisons from 210 scans
 
-  - Classify pairs as a "match" or "non-match" based on estimated match probability
+  - Classify pairs as a "match" or "non-match" based on similarity score
   
-  <!-- - Select model that balances false positive and false negative error rates -->
+  <!-- - Select model that balances true positive and true negative error rates -->
   
   - Explore two optimization criteria:
 
     - Model that minimizes overall error
 
-    - Model that balances false positive and false negative error rates
+    - Model that balances true positive and true negative error rates
 
 . . .
 
 - Test model on 44,850 pairwise comparisons from 300 scans
 
-  - Compute false positive and false negative rates for each model
+  - Compute true positive and true negative rates for each model
   
-  - Consider distributions of match probabilities for truly matching and non-matching pairs
+  - Consider distributions of similarity scores for truly matching and non-matching pairs
 
 ::: {.notes}
 
@@ -1838,55 +1849,52 @@ To do so, we used 510 cartridge cases from the Ames I study to train and test a 
 **NEXT**
 
 The way we did this was by using 21,945 pairwise comparisons to train the logistic regression model.
-So given a cartridge case pair, this logistic regression model will classify that pair a match or a non-match based on an predicted match probability.
+So given a cartridge case pair, this logistic regression model will classify that pair a match or a non-match based on a similarity score.
 The process of training a model involves selecting model parameters that optimize some criteria.
-For example, we consider two different optimization criteria: one where we select the model that minimizes the overall classification error rate and another that balances the false positive and false negative error rates.
+For example, we consider two different optimization criteria: one where we select the model that minimizes the overall classification error rate and another that balances the true positive and true negative error rates.
 I'll talk on the next slide about why we consider these criteria separately.
 
 **NEXT**
 
 Once we have the trained model, we use 44,850 pairwise comparisons to test the model on whether it can differentiate between new matching and non-matching comparisons.
-We are interested not only in the false positive and false negative error rates, but we also want to consider the predicted probabilities of the matching and non-matching comparisons since this actually what an examiner would use during their examination.
+We are interested not only in the true positive and true negative error rates, but we also want to consider the predicted probabilities of the matching and non-matching comparisons since this actually what an examiner would use during their examination.
 
 :::
 
 
 ## Test Classification Results {.smaller}
 
-| Source | False Pos (%) | False Neg (%) | Overall Error (%) |
-| ------ | -------------: | -------------: | -----------: |
-| ACES, Minimum Error | 0.07 | 7.66 | 0.59 |
-| ACES, Balanced FP/FN | 1.93 | 4.25 | 2.09 |
-| Ames I | 1.01 | 0.37 | 0.80 |
-| Ames I, Inconcl. as errors| 34.76 | 1.37 | 23.62 |
+| Source | True Pos. (%) | True Neg. (%) | Overall Inconcl. (%) | Overall Acc. (%) |
+| ------ | -------------: | -------------: | -------------: | -----------: |
+| ACES, Min. Error | 92.3 | 99.9 | 0.0 | 99.4 |
+| ACES, Balanced TP/TN | 95.7 | 98.1 | 0.0 | 97.9 |
+| Ames I | 99.6 | 65.2 | 31.5 | |
 
 . . .
 
-- We compare *pair*wise (1 to 1), Ames I [@baldwin] compared quartets (3 to 1)
+- Ames I [@baldwin] compared quartets (3 to 1) and considered inconclusives
 
 . . .
 
 - Class imbalance in test data: 3,081 match vs. 41,769 non-match comparisons
 
-  - Natural to achieve higher overall accuracy, lower false positive, and higher false negative rate with more non-match classifications
-  
 . . .
   
-- The "Balanced FP/FN" model was selected based on the training data. The test data classifications aren't guaranteed to also be balanced. 
+- The "Balanced TP/TN" model was selected based on the training data. The test data classifications aren't guaranteed to also be balanced. 
 
 ::: {.notes}
 
 The table on this slide summarizes the classification error rates for the two trained models based on the test data.
-In the first row, we can see that the model selected to minimize the overall error rate has a low error rate of 0.59% which consists of a false positive error rate of 0.07% and false negative error rate of 7.66%.
-In second row, the model selected to balance the false palse positive and false negative error rates has a larger overall error rate of 2.09%, but this consists of a false positive and false negative error rates that are much closer to each other.
+In the first row, we can see that the model selected to minimize the overall error rate has a low error rate of 0.59% which consists of a true positive error rate of 0.07% and true negative error rate of 7.66%.
+In second row, the model selected to balance the false palse positive and true negative error rates has a larger overall error rate of 2.09%, but this consists of a true positive and true negative error rates that are much closer to each other.
 
 The reason that I compare these two models to each other is to highlight the fact that two different criteria lead to considerably different results.
 Eventually, we in the forensics and legal communities will need to decide which criteria we want to use when selecting statistical models.
-For example, we could consider whether a false positive error has worse ethical consequences than a false negative - or vice versa.
+For example, we could consider whether a true positive error has worse ethical consequences than a true negative - or vice versa.
 Sp there are many criteria we could use, and I wanted to emphasize that these could have radically different outcomes.
 
 For comparison, I've repeated the results reported in the Baldwin study.
-We see that the first model actually has a lower overall error rate, although this is at the expense of a much larger false negative error rate.
+We see that the first model actually has a lower overall error rate, although this is at the expense of a much larger true negative error rate.
 
 **NEXT**
 
@@ -1897,38 +1905,41 @@ Now, a few notes I wanted to make here: the results here are somewhat difficult 
 I also wanted to point out that there is a large class imbalance between the matching and non-matching comparisons in the test data.
 You can see that there are around 3000 matching comparisons and 42,0000 non-matching comparisons.
 This is not at all unique to cartridge case comparisons, but I wanted to point this out to emphasize that if we get more out of erring on the side of non-matching classifications than matching classifications.
-For example, you can see this represented in the first model that a very low false positive rate but a large false negative rate.
+For example, you can see this represented in the first model that a very low true positive rate but a large true negative rate.
 This model seemingly has a preference for making non-match classifications.
 
 **NEXT**
 
-Finally, some of you may be looking at these results and think "why does the balanced false positive and false negative model not have a very well balanced false positive and false negative error rates?"
+Finally, some of you may be looking at these results and think "why does the balanced true positive and true negative model not have a very well balanced true positive and true negative error rates?"
 I wanted to point out that we select the model that balances these rates on the training data, not the test data.
 As such, there isn't a guarantee that the test classifications will also be balanced - and in this case they aren't.
 
 :::
 
-## Match Probability Distributions {.smaller .scrollable}
+## Similarity Score Distributions {.smaller .scrollable}
 
 - We consider classification accuracy as a means of selecting/comparing models. 
 
-- In practice, the examiner would use the estimated match probability as part of their examination.
+- In practice, the examiner would use the similarity score as part of their examination.
 
 ![](images/matchProbDotPlot.png){fig-align="center"  width="90%"}
 
+- Matching comparisons from Firearm T cartridge cases tend to have lower similarity scores:
+
+![](images/matchProbDotPlot_firearmT.png){fig-align="center"  width="70%"}
 
 ::: {.notes}
 
 Now, it's all well and good to look at the classification accuracy to compare different models.
-However, in practice the examiner would instead consider the estimated probability of a match as a similarity score.
+However, in practice the examiner would instead consider the  similarity score.
 
-The plot on the slide shows the predicted match probabilities for the test data.
+The plot on the slide shows the predicted similarity score for the test data.
 Each of thes points represents a single pairwise comparison, and we distinguish those comparisons by whether they are truly matching or non-matching.
-We can see on top that the non-match comparisons generally have small match probabilities, which is certainly something we hope for.
-Many of the matching comparisons have large match probabilities, but there is a distinct group of comparisons that have very small match probabilities.
-This explains the large false negative error rates we saw on the last slide.
+We can see on top that the non-match comparisons generally have small similarity score, which is certainly something we hope for.
+Many of the matching comparisons have large similarity score, but there is a distinct group of comparisons that have very small similarity score.
+This explains the large true negative error rates we saw on the last slide.
 
-One thing we've noticed with the logistic regression model is that the predictred match probabilities tend to be very polarized, meaning the probabilities are either very close to 1 or very close to 0.
+One thing we've noticed with the logistic regression model is that the predictred similarity score tend to be very polarized, meaning the probabilities are either very close to 1 or very close to 0.
 
 [Go to appendix?]
 
@@ -1954,9 +1965,9 @@ One thing we've noticed with the logistic regression model is that the predictre
 
 - Develop free, open source software to implement visual diagnostics & ACES
 
-  - Need additional "stress tests" (different ammunition/firearms, degradation levels, etc.)
+  - We train our model on 10 firearms, all with the same make/model and ammunition
 
-  - Explore other optimization criteria
+  - Need additional "stress tests" (different ammunition/firearms, degradation, etc.)
 
 ## Thank You!
 
@@ -1977,6 +1988,6 @@ One thing we've noticed with the logistic regression model is that the predictre
 
 ## Appendix: Firearm-wise Probabilities {.smaller}
 
-- Specific firearms in the test set tend to have lower associated match probabilities
+- Specific firearms in the test set tend to have lower associated similarity score for matching comparisons
 
 ![](images/matchProbDotPlot_byBarrel.png){fig-align="center" width="70%"}
