@@ -175,15 +175,37 @@ It's important to note here that we call cartridge cases a "match" if they were 
 
 The researchers then sent these cartridge case sets to 216 examiners who were tasked with determining whether the one unknown source cartridge case came from the same pistol as the three known-match cartridge cases
 
-The researchers were particularly interested in assessing the true positive and true negative error rates of these examiners
-A true positive error occurs when a non-match cartridge case is classified as a match while a true negative error occurs when a matching cartridge case is classified as a non-match
+Some more terminology here: correctly classifying as set of matching cartridge cases is called a "true positive" while a "true negative" is correctly classifying a set of non-matching cartridge cases.
 
 **NEXT**
 
 The results they got back showed that the examiners made very few errors during their examinations.
-Out of 3,268 comparisons, examiners only got 26 wrong with a true positive rate of 1.01% and true negative rate of 0.37%.
+On the slide you will see a table of results from the study.
+There were a total of 3,270 comparisons from the participants, which we separate here into different outcomes.
+The three columns represent the participants' responses - whether they concluded that cartridge cases matched, they did not  match, or the evidence was inconclusive.
 
-One goal that we had for this project was to come up with an algorithm that had similar performance to the results of this study
+An "inconclusive" is a type of conclusion sanctioned by the Association of Firearm and Toolmark Examiners for situations in which two cartridge case may share some similarities or differences, but not enough to conclusively say whether they are a match or non-match
+
+The rows of the table represent the ground-truth of the comparisons, so we can compare the examiners conclusions against the true nature of the comparisons.
+
+We see that there were 1,075 true positives -- remember these are correctly classified matching comparsisons- out of a total of 1,090 matching comparisons.
+There were also 1,421 true negatives out of a total of 2,180 non-matching comparisons.
+
+The other numbers in the first two columns represent errors that the examiners made.
+There were 4 truly matching comparisons that were misclassified as non-matches -- we call these false negatives -- and there were 22 non-matching comparisons that were misclassified as matches, these are the false positives.
+
+The third column shows the number of inconclusives where we see that there were many more inconclusive decisions for truly non-matching comparisons than for matching comparisons.
+
+**NEXT**
+
+The table you see here shows the true positive, true negative, and overall inconclusive rates from the results of this study.
+The true positive rate is the number of true positives divided by the total number of matching comparisons.
+
+Similarly, the true negative rate is the number of true negatives divided by the total number of non-matchign comparisons.
+
+We see that the true negative rate is lower than the true positive rate, although this can accounted for because of the large number of inconclusives made for the non-matching comparisons.
+
+This brings us to the inconclusive rate, which is the number of inconclusives, 748, divided by the total number of comparisons.
 
 :::
 
@@ -214,7 +236,7 @@ One goal that we had for this project was to come up with an algorithm that had 
 
 | True Positive (%) | True Negative (%) | Overall Inconclusives (%) |
 | -------------: | -------------: | -------------: |
-| 99.6 | 65.2 | 33.8 |
+| 99.6 | 65.2 | 22.9 |
 
 </br>
 
@@ -1797,8 +1819,7 @@ So the left side shows the estimated registrations for the cells in scan K013sA2
 There's nothing stopping us from repeating the cell-based registration, but in the other direction -- that is, trying to find where cells align in the other scan, K013sA1.
 The right-hand side shows these results.
 Again, we see a cluster of blue points corresponding to blue cells that seem to agree on a particular registration.
-The red points again represent cells that don't agree.
-The key finding from this visual is that the estimated registration in scan K013sA1 are almost the exact opposite of the registration in scan K013sA2.
+The key finding from this visual is that the estimated registration in scan K013sA1 is almost the exact opposite of the registration in scan K013sA2.
 We can see by noting that the the axes on the right-hand side have been reversed, meaning the axes go from positive to negative from left to right.
 We do this to demonstrate that the clusters are located at essentially the same spot, just opposite of each other.
 
@@ -1828,7 +1849,7 @@ The takeaway from this plot is again that these features distingusih between mat
 
     - Model that minimizes overall error
 
-    - Model that balances true positive and true negative error rates
+    - Model that balances true positive and true negative rates
 
 . . .
 
@@ -1868,7 +1889,7 @@ We are interested not only in the true positive and true negative error rates, b
 | ------ | -------------: | -------------: | -------------: | -----------: |
 | ACES, Min. Error | 92.3 | 99.9 | 0.0 | 99.4 |
 | ACES, Balanced TP/TN | 95.7 | 98.1 | 0.0 | 97.9 |
-| Ames I | 99.6 | 65.2 | 31.5 | |
+| Ames I | 99.6 | 65.2 | 22.9 | |
 
 . . .
 
@@ -1884,49 +1905,42 @@ We are interested not only in the true positive and true negative error rates, b
 
 ::: {.notes}
 
-The table on this slide summarizes the classification error rates for the two trained models based on the test data.
-In the first row, we can see that the model selected to minimize the overall error rate has a low error rate of 0.59% which consists of a true positive error rate of 0.07% and true negative error rate of 7.66%.
-In second row, the model selected to balance the false palse positive and true negative error rates has a larger overall error rate of 2.09%, but this consists of a true positive and true negative error rates that are much closer to each other.
+The table on this slide summarizes the true positive, true negative, and accuracy rates for the two trained models based on the test data.
+In the first row, we can see that the model selected to minimize the overall error rate has a high overall accuracy of 99.4%, although the difference between the true positive and negative rates are different.
+
+In second row, the model selected to balance the true positive and true negative rates has a smaller overall accuracy, yet with closer true positive and negative rates
 
 The reason that I compare these two models to each other is to highlight the fact that two different criteria lead to considerably different results.
 Eventually, we in the forensics and legal communities will need to decide which criteria we want to use when selecting statistical models.
-For example, we could consider whether a true positive error has worse ethical consequences than a true negative - or vice versa.
-Sp there are many criteria we could use, and I wanted to emphasize that these could have radically different outcomes.
+For example, we could consider whether a false positive error has worse ethical consequences than a false negative - or vice versa.
 
 For comparison, I've repeated the results reported in the Baldwin study.
-We see that the first model actually has a lower overall error rate, although this is at the expense of a much larger true negative error rate.
+We can see that the participants of the study had a larger true positive rate, although our models tend to have a much larger true negative rate.
+We don't include overall accuracy here because there is currently some debate about how to treat inconclusives when calculating accuracy -- for example, should be counted among the "correct" or "incorrect" classifications or considered at all? We don't have a good answer for this yet.
 
 **NEXT**
 
 Now, a few notes I wanted to make here: the results here are somewhat difficult to compare directly to the Baldwin results since we compare every pair of cartridge cases whereas Baldwin compared a groupd of 3 known-match cartridge cases to 1 unknown source cartrdige case.
 
+They also considered inconclusives in the study, which may explain the differences in the true negative rates between the model and study.
+
 **NEXT**
 
 I also wanted to point out that there is a large class imbalance between the matching and non-matching comparisons in the test data.
-You can see that there are around 3000 matching comparisons and 42,0000 non-matching comparisons.
-This is not at all unique to cartridge case comparisons, but I wanted to point this out to emphasize that if we get more out of erring on the side of non-matching classifications than matching classifications.
-For example, you can see this represented in the first model that a very low true positive rate but a large true negative rate.
-This model seemingly has a preference for making non-match classifications.
+There are about 3000 matching comparisons and 42,0000 non-matching comparisons.
+This is not at all unique to cartridge case comparisons, but I wanted to point this out to emphasize that we tend to get better results if we err on the side of making non-matching classifications. 
+You can see this illustrated in the first model that has a very high true negative rate but a smaller true positive rate.
+This model seems to have a preference for making non-match classifications.
 
 **NEXT**
 
-Finally, some of you may be looking at these results and think "why does the balanced true positive and true negative model not have a very well balanced true positive and true negative error rates?"
-I wanted to point out that we select the model that balances these rates on the training data, not the test data.
-As such, there isn't a guarantee that the test classifications will also be balanced - and in this case they aren't.
+Finally, some of you may be looking at these results and think "why doesn't the second model have a more balanced true positive and true negative rate?"
+Keep in mind that we selected this model because it balances these rates on the training data, not the test data.
+There isn't a guarantee that the test classifications will also be balanced - and in this case they aren't.
 
 :::
 
 ## Similarity Score Distributions {.smaller .scrollable}
-
-- We consider classification accuracy as a means of selecting/comparing models. 
-
-- In practice, the examiner would use the similarity score as part of their examination.
-
-![](images/matchProbDotPlot.png){fig-align="center"  width="90%"}
-
-- Matching comparisons from Firearm T cartridge cases tend to have lower similarity scores:
-
-![](images/matchProbDotPlot_firearmT.png){fig-align="center"  width="70%"}
 
 ::: {.notes}
 
@@ -1936,22 +1950,57 @@ However, in practice the examiner would instead consider the  similarity score.
 The plot on the slide shows the predicted similarity score for the test data.
 Each of thes points represents a single pairwise comparison, and we distinguish those comparisons by whether they are truly matching or non-matching.
 We can see on top that the non-match comparisons generally have small similarity score, which is certainly something we hope for.
-Many of the matching comparisons have large similarity score, but there is a distinct group of comparisons that have very small similarity score.
-This explains the large true negative error rates we saw on the last slide.
 
-One thing we've noticed with the logistic regression model is that the predictred similarity score tend to be very polarized, meaning the probabilities are either very close to 1 or very close to 0.
+**NEXT**
 
-[Go to appendix?]
+Many of the matching comparisons have large similarity score, but there is a group of comparisons that have very small similarity score.
+In particular, we discovered that matching comparisons between scans fired from the firearm labeled "T" tend to have lower similarity scores.
+This might contribute to the low true positive rate we noted on the last slide.
 
 :::
+
+- We consider classification accuracy as a means of selecting/comparing models. 
+
+- In practice, the examiner would use the similarity score as part of their examination.
+
+![](images/matchProbDotPlot.png){fig-align="center"  width="90%"}
+
+. . .
+
+- Matching comparisons from Firearm T cartridge cases tend to have lower similarity scores:
+
+![](images/matchProbDotPlot_firearmT.png){fig-align="center"  width="70%"}
+
 
 # Conclusions
 
 ## Conclusions & Future Work {.smaller}
 
+::: {.notes}
+
+In conclusion, although automatic comparison algorithms are useful for measuring the simmilarity between two pieces of evidence, they can often by difficult to interpret or explain.
+
+Visual diagnostics help us understand the behavior of these comparison algorithms.
+
+**NEXT**
+
+Specifically, we introduced a set of diagnostic tools that are useful for explaining the behavior of the ACES algorithm and for comparing cartridge case evidence.
+
+We also demonstrated that the ACES algorithm shows promise at measuring the similarity between two cartridge cases.
+
+**NEXT**
+
+In the future, we hope to develop free and open-source software that implement our visual diagnostics and comparison algorithms.
+
+Our hope in making these tools easily available to others is to apply them to a diverse range of firearm and ammunition types.
+So far, we have a model that is trained on only 10 firearms and tested on 15 firearms.
+We need to devise additional "stress tests" so that we understand the strengths and limitations of the ACES algorithm.
+
+:::
+
 - Automatic comparison algorithms are useful for obtaining numerical measures of similarity for two pieces of evidence
 
-- Visual diagnostics help explain what happens "under the hood" of comparison algorithms
+- Visual diagnostics help explain the inner mechanisms of comparison algorithms
 
 . . .
 
@@ -1970,6 +2019,13 @@ One thing we've noticed with the logistic regression model is that the predictre
   - Need additional "stress tests" (different ammunition/firearms, degradation, etc.)
 
 ## Thank You!
+
+::: {.names}
+
+Thank you all for joining me.
+On the slide are additional links to resources in case you are interested in learning more about the tools I discussed today
+
+:::
 
 - **impressions** R package for visual diagnostics
   - <https://jzemmels.github.io/impressions/>
