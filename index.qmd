@@ -173,7 +173,7 @@ It's important to note here that we call cartridge cases a "match" if they were 
 
 **NEXT**
 
-The researchers then sent these cartridge case sets to 216 examiners who were tasked with determining whether the one unknown source cartridge case came from the same pistol as the three known-match cartridge cases
+The researchers then sent these cartridge case sets to 218 examiners who were tasked with determining whether the one unknown source cartridge case came from the same pistol as the three known-match cartridge cases
 
 Some more terminology here: correctly classifying as set of matching cartridge cases is called a "true positive" while a "true negative" is correctly classifying a set of non-matching cartridge cases.
 
@@ -976,8 +976,11 @@ The element-wise average is sort of a hybrid of the two surfaces while the eleme
 
 We then consider elements where the distance between the two scans is greater than 1 micron.
 The black and white image you see on the slide shows white elements where the distance between the two surfaces is larger than 1 and black elements that are less than 1.
+
 We apply a filter to the element-wise average based on whether distance between the surfaces is larger than 1 micron.
-We remove those elements from the element-wise average, which results in a visualization of the obvious "similarities" between the two original scans.
+So anywhere you see a white pixel in the black and white image, we remove that from th element-wise average.
+You can see the results of this filtering on the bottom.
+This results in a visualization of the obvious "similarities" - where the two surfaces are close - between the two original scans.
 I'll show you a more clear visualization of this plot on the next slide.
 
 **NEXT**
@@ -1029,9 +1032,12 @@ We show the original scans in the first column after scan K013sA2 has been align
 The second and third columns show the filtered element-wise average and differences I discussed on the last slide.
 
 To recap, the element-wise average shows the similarities between two scans.
-For example, the eye is naturally drawn to some dark orange and purple regions in the bottom of the element-wise average.
+What we've found to be most useful when using the comparison plot is to consider visually distinct regions in the second and third columns.
+For example, in the element-wise average is naturally drawn towards the darkest shades of purple and orange.
+For example, I notice some dark purple and orange regions at the bottom of the two surfaces.
 After identifying these noteworthy regions, we can go back to the original scans in the first column to further explore the similarities around this area.
-For example, the dark purple observations are part of striped markings on the thin edge of the two surfaces.
+The purple and orange observations appear to be part of striped impressions.
+So the element-wise average gives us an idea of how close these impressions are to one another.
 
 In a similar manner, we can look at the third column to identify differences between the two scans.
 Again, the eye is naturally drawn to the darkest shades.
@@ -1615,9 +1621,11 @@ The first group of features we calculate are based on the visual diagnostic stat
 We calculate 7 features at the full scan and cell levels.
 For example, the similarities vs. differences ratio, the average and standard deviation of the different region sizes, and the correlation between the different regions.
 
-At the bottom of the slide, you can see the distributions of these features based on the comparisons in our training data. The orange distributions represent the matching comparisons while the gray distributions represent non-matching comparisons.
-You'll note that the matching and non-matching distributions have some partial overlap between in these plots.
-I show these to demonstrate that these 7 features are successful, to varying degrees, at distinguishing between matching and non-matching comparisons, meaning we can use them in a classification algorithm to classify matching and non-matching pairs.
+At the bottom of the slide, you can see the distributions of these features based on the comparisons in our training data. The orange distributions represent the feature values for the matching comparisons while the gray distributions represent non-matching comparisons.
+
+You'll note that the distributions of these features only have some overlap between the matches and non-matches. 
+That is, the values of these features behave differently depending on if we consider a match or non-match comparison.
+This means that we can use these features in a classification algorithm to distinguish between matches and non-matches.
 
 So that's the first group of features
 
@@ -1810,14 +1818,17 @@ To measure this, we apply an algorithm called the Density-Based Spatial Clusteri
 
 On the slide, you can see two scatterplots that represent the estimated translations for each cell in matching comparison.
 So each point in the scatterplot corresponds to one of the cells below.
+
 On the left, you can see that there is a cluster of points, colored blue, that correspond to the cells that are also colored blue below.
 These are cells that agree on a particular registration, in this case it looks like about -100 microns horizontally and -100 microns vertically.
 You can also see below that these cells align in a nice grid pattern -- cell 1, 5 is next to cell 1, 6 which is above cell 2, 6, etc. - which we would expect because this is matching pair of scans.
+
 The red points, on the other hand, correspond to the red cells that don't seem to agree on a single registration -- they are sort of randomly distributed on the scan.
 
 So the left side shows the estimated registrations for the cells in scan K013sA2.
 There's nothing stopping us from repeating the cell-based registration, but in the other direction -- that is, trying to find where cells align in the other scan, K013sA1.
 The right-hand side shows these results.
+
 Again, we see a cluster of blue points corresponding to blue cells that seem to agree on a particular registration.
 The key finding from this visual is that the estimated registration in scan K013sA1 is almost the exact opposite of the registration in scan K013sA2.
 We can see by noting that the the axes on the right-hand side have been reversed, meaning the axes go from positive to negative from left to right.
@@ -1827,7 +1838,7 @@ So the DBSCAN algorithm allows us to identify these clusters of points.
 From this, we compute 4 features including an indicator variable for the existence of a cluster, the average cluster size, and the difference in the estimated registrations between the two comparison directions.
 
 The distributions of these features is shown below.
-The takeaway from this plot is again that these features distingusih between matching and non-matching comparisons.
+The takeaway from this plot is that these features also distinguish between matching and non-matching comparisons.
 
 :::
 
@@ -1847,7 +1858,7 @@ The takeaway from this plot is again that these features distingusih between mat
   
   - Explore two optimization criteria:
 
-    - Model that minimizes overall error
+    - Model that maximizes the overall accuracy
 
     - Model that balances true positive and true negative rates
 
@@ -1870,15 +1881,15 @@ To do so, we used 510 cartridge cases from the Ames I study to train and test a 
 **NEXT**
 
 The way we did this was by using 21,945 pairwise comparisons to train the logistic regression model.
-So given a cartridge case pair, this logistic regression model will classify that pair a match or a non-match based on a similarity score.
-The process of training a model involves selecting model parameters that optimize some criteria.
-For example, we consider two different optimization criteria: one where we select the model that minimizes the overall classification error rate and another that balances the true positive and true negative error rates.
+So given a cartridge case pair, this model will classifies that pair as a match or a non-match based on an estimated similarity score.
+The process of training this model involves selecting model parameters that optimize some criteria.
+For example, we consider two different optimization criteria: one where we select the model that minimizes the overall classification error rate and another that balances the true positive and true negative rates.
 I'll talk on the next slide about why we consider these criteria separately.
 
 **NEXT**
 
 Once we have the trained model, we use 44,850 pairwise comparisons to test the model on whether it can differentiate between new matching and non-matching comparisons.
-We are interested not only in the true positive and true negative error rates, but we also want to consider the predicted probabilities of the matching and non-matching comparisons since this actually what an examiner would use during their examination.
+We are interested not only in the true positive and true negative rates, but we also want to consider the similarity scores for the matching and non-matching comparisons since this actually what an examiner would use during their examination.
 
 :::
 
@@ -1906,37 +1917,38 @@ We are interested not only in the true positive and true negative error rates, b
 ::: {.notes}
 
 The table on this slide summarizes the true positive, true negative, and accuracy rates for the two trained models based on the test data.
-In the first row, we can see that the model selected to minimize the overall error rate has a high overall accuracy of 99.4%, although the difference between the true positive and negative rates are different.
+In the first row, we can see that the model we selected to maximize the overall accuracy has a accuracy of 99.4%, although there is a noticable difference between the true positive and true negative rates.
 
-In second row, the model selected to balance the true positive and true negative rates has a smaller overall accuracy, yet with closer true positive and negative rates
+In second row, the model we selected to balance the true positive and true negative rates has a smaller overall accuracy, yet with closer true positive and negative rates
 
-The reason that I compare these two models to each other is to highlight the fact that two different criteria lead to considerably different results.
+The reason that I compare these two models to each other is to highlight the fact that these two criteria lead to considerably different results.
 Eventually, we in the forensics and legal communities will need to decide which criteria we want to use when selecting statistical models.
 For example, we could consider whether a false positive error has worse ethical consequences than a false negative - or vice versa.
 
-For comparison, I've repeated the results reported in the Baldwin study.
+For comparison, I've repeated the results reported in the Baldwin study in the last row.
 We can see that the participants of the study had a larger true positive rate, although our models tend to have a much larger true negative rate.
-We don't include overall accuracy here because there is currently some debate about how to treat inconclusives when calculating accuracy -- for example, should be counted among the "correct" or "incorrect" classifications or considered at all? We don't have a good answer for this yet.
+So they act as a nice complement to one another
+We don't include overall accuracy here because there is currently some debate about how to treat inconclusives when calculating accuracy.
 
 **NEXT**
 
-Now, a few notes I wanted to make here: the results here are somewhat difficult to compare directly to the Baldwin results since we compare every pair of cartridge cases whereas Baldwin compared a groupd of 3 known-match cartridge cases to 1 unknown source cartrdige case.
+Now, a few notes I wanted to make here: the results here are somewhat difficult to compare directly to the Ames I results since we compare every pair of cartridge cases whereas Baldwin compared groups of 3 known-match cartridge cases to 1 unknown source cartridge case.
 
-They also considered inconclusives in the study, which may explain the differences in the true negative rates between the model and study.
+They also considered inconclusives in the study, which may explain the differences in the true negative rates between our models and the study.
 
 **NEXT**
 
 I also wanted to point out that there is a large class imbalance between the matching and non-matching comparisons in the test data.
-There are about 3000 matching comparisons and 42,0000 non-matching comparisons.
-This is not at all unique to cartridge case comparisons, but I wanted to point this out to emphasize that we tend to get better results if we err on the side of making non-matching classifications. 
+There are about 3000 matching comparisons and 42,000 non-matching comparisons.
+This is not at all unique to cartridge case compared to other forensic disciplines, but I wanted to point this out to emphasize that we tend to get better results if we err on the side of making non-matching classifications. 
 You can see this illustrated in the first model that has a very high true negative rate but a smaller true positive rate.
 This model seems to have a preference for making non-match classifications.
 
 **NEXT**
 
 Finally, some of you may be looking at these results and think "why doesn't the second model have a more balanced true positive and true negative rate?"
-Keep in mind that we selected this model because it balances these rates on the training data, not the test data.
-There isn't a guarantee that the test classifications will also be balanced - and in this case they aren't.
+Keep in mind though that we selected this model because it balances these rates on the training data, not the test data.
+There isn't a guarantee that the test classifications will also be balanced.
 
 :::
 
@@ -1944,18 +1956,19 @@ There isn't a guarantee that the test classifications will also be balanced - an
 
 ::: {.notes}
 
-Now, it's all well and good to look at the classification accuracy to compare different models.
-However, in practice the examiner would instead consider the  similarity score.
+Now, it's all well and good to look at the classification accuracy for the sake of comparing different models.
+However, in practice the examiner would instead consider the similarity score computed by the model rather a binary classification.
 
 The plot on the slide shows the predicted similarity score for the test data.
-Each of thes points represents a single pairwise comparison, and we distinguish those comparisons by whether they are truly matching or non-matching.
+Each of thes points represents a single pairwise comparison, and we distinguish those comparisons by whether they are truly non-matching matching.
 We can see on top that the non-match comparisons generally have small similarity score, which is certainly something we hope for.
+
+While many of the matching comparisons have large similarity score, there is a group of comparisons that have very small similarity score.
 
 **NEXT**
 
-Many of the matching comparisons have large similarity score, but there is a group of comparisons that have very small similarity score.
-In particular, we discovered that matching comparisons between scans fired from the firearm labeled "T" tend to have lower similarity scores.
-This might contribute to the low true positive rate we noted on the last slide.
+In particular, we discovered that matching comparisons between cartridge cases from the firearm labeled "T" tend to have lower similarity scores, which you can see on the slide.
+This might contribute to our models' low true positive rate we noted on the last slide.
 
 :::
 
@@ -1984,7 +1997,7 @@ Visual diagnostics help us understand the behavior of these comparison algorithm
 
 **NEXT**
 
-Specifically, we introduced a set of diagnostic tools that are useful for explaining the behavior of the ACES algorithm and for comparing cartridge case evidence.
+Today, we introduced a set of diagnostic tools that are useful for explaining the behavior of the ACES algorithm and for comparing cartridge case evidence.
 
 We also demonstrated that the ACES algorithm shows promise at measuring the similarity between two cartridge cases.
 
@@ -1994,7 +2007,7 @@ In the future, we hope to develop free and open-source software that implement o
 
 Our hope in making these tools easily available to others is to apply them to a diverse range of firearm and ammunition types.
 So far, we have a model that is trained on only 10 firearms and tested on 15 firearms.
-We need to devise additional "stress tests" so that we understand the strengths and limitations of the ACES algorithm.
+We need to devise additional "stress tests" so that we understand the strengths and limitations of the visual diagnostics and ACES algorithm.
 
 :::
 
@@ -2020,9 +2033,9 @@ We need to devise additional "stress tests" so that we understand the strengths 
 
 ## Thank You!
 
-::: {.names}
+::: {.notes}
 
-Thank you all for joining me.
+I want to thank you all for joining me.
 On the slide are additional links to resources in case you are interested in learning more about the tools I discussed today
 
 :::
@@ -2042,7 +2055,7 @@ On the slide are additional links to resources in case you are interested in lea
 
 :::
 
-## Appendix: Firearm-wise Probabilities {.smaller}
+## Appendix: Firearm-wise Similarity Scores {.smaller}
 
 - Specific firearms in the test set tend to have lower associated similarity score for matching comparisons
 
